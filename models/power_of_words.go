@@ -49,3 +49,11 @@ type Sentiments struct {
 	Negative int `json:"negative_sentiments"`
 	Neutral  int `json:"neutral_sentiments"`
 }
+
+type TopFeedRow struct {
+	Title             string    `json:"title"`
+	Published         time.Time `json:"published"`
+	SourceName        string    `json:"source_name"`
+	SentimentValue    float64   `json:"sentiment_value"`
+	SentimentCompound float64   `json:"sentiment_compound"`
+}

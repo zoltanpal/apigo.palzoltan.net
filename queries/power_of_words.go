@@ -39,4 +39,21 @@ const (
         WHERE fs.model_id = 1
         AND fs.feed_date BETWEEN $1 AND $2
     `
+	// TopFeeds
+	TopFeeds = `
+        SELECT
+            f.title,
+            f.published,
+            s.name,
+            fs.sentiment_value,
+            fs.sentiment_compound
+        FROM feed_sentiments fs
+        JOIN feeds   f ON fs.feed_id  = f.id
+        JOIN sources s ON f.source_id = s.id
+        WHERE fs.model_id = 1
+            AND f.feed_date BETWEEN $1 AND $2
+            AND fs.sentiment_key = $3
+        ORDER BY fs.sentiment_value DESC
+        LIMIT $4
+    `
 )

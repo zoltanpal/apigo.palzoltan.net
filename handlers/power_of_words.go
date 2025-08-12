@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -76,7 +78,7 @@ func GetSentimentGrouped(c *gin.Context) {
 	c.JSON(http.StatusOK, series)
 }
 
-// CountSentiments GET /pow/count_sentiments?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD
+// CountSentiments [GET] /pow/count_sentiments?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD
 func CountSentiments(c *gin.Context) {
 	const layout = "2006-01-02"
 	start := c.Query("start_date")
@@ -102,4 +104,45 @@ func CountSentiments(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, counts)
+}
+
+// GET /top_feeds?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD&pos_neg=positive&limit=5
+func TopFeeds(c *gin.Context) {
+	const layout = "2006-01-02"
+
+	start := c.Query("start_date")
+	end := c.Query("end_date")
+	if start == "" || end == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "start_date and end_date are required (YYYY-MM-DD)"})
+		return
+	}
+	if _, err := time.Parse(layout, start); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid start_date format"})
+		return
+	}
+	if _, err := time.Parse(layout, end); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid end_date format"})
+		return
+	}
+
+	posNeg := strings.ToLower(c.DefaultQuery("pos_neg", "positive"))
+	switch posNeg {
+	case "positive", "negative", "neutral":
+		// ok
+	default:
+		posNeg = "positive"
+	}
+
+	limitVal, err := strconv.Atoi(c.DefaultQuery("limit", "5"))
+	if err != nil || limitVal < 1 {
+		limitVal = 5
+	}
+
+	rows, repoErr := repositories.TopFeeds(c.Request.Context(), start, end, posNeg, limitVal)
+	if repoErr != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch top feeds"})
+		return
+	}
+
+	c.JSON(http.StatusOK, rows)
 }

@@ -98,3 +98,34 @@ func CountSentiments(ctx context.Context, startDate, endDate string) (models.Sen
 	}
 	return out, nil
 }
+
+// Fetch the Feeds with the max positive & negative sentiments
+func TopFeeds(ctx context.Context, startDate, endDate, posNeg string, limit int) ([]models.TopFeedRow, error) {
+	start := startDate + " 00:00:00"
+	end := endDate + " 23:59:59"
+
+	rows, err := db.DB.QueryContext(ctx, queries.TopFeeds, start, end, strings.ToLower(posNeg), limit)
+	if err != nil {
+		return nil, fmt.Errorf("TopFeeds: query error: %w", err)
+	}
+	defer rows.Close()
+
+	out := make([]models.TopFeedRow, 0, limit)
+	for rows.Next() {
+		var r models.TopFeedRow
+		if err := rows.Scan(
+			&r.Title,
+			&r.Published,
+			&r.SourceName,
+			&r.SentimentValue,
+			&r.SentimentCompound,
+		); err != nil {
+			return nil, fmt.Errorf("TopFeeds: scan error: %w", err)
+		}
+		out = append(out, r)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("TopFeeds: rows iteration error: %w", err)
+	}
+	return out, nil
+}
