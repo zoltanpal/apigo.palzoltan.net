@@ -32,25 +32,34 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            set -e  # Stop on any error
-
             ENV=${{ github.event.inputs.environment }}
 
+            # navigate to the work directory
             if [ "$ENV" == "prod" ]; then
               echo "Deploying to production..."
               WORK_DIR=${{ secrets.PROD_SERVER_DEPLOYMENT_PATH }}
+              cd ${{ secrets.PROD_SERVER_DEPLOYMENT_PATH }}
+              git config --global --add safe.directory ${{ secrets.PROD_SERVER_DEPLOYMENT_PATH }}
             else
               echo "Deploying to development..."
               WORK_DIR=${{ secrets.DEV_SERVER_DEPLOYMENT_PATH }}
+              cd ${{ secrets.DEV_SERVER_DEPLOYMENT_PATH }}
+              git config --global --add safe.directory ${{ secrets.DEV_SERVER_DEPLOYMENT_PATH }}
             fi
 
-            echo "Working directory: $WORK_DIR"
-            cd "$WORK_DIR"
+            # Clone repo if missing
+            if [ ! -d ".git" ]; then
+              git clone https://github.com/zoltanpal/apigo.palzoltan.net.git .
+              git checkout ${{ github.ref_name }}
+            fi
 
-            # Git pull latest changes
+            # Fetch latest changes
             git fetch origin
-            git checkout ${{ github.ref_name }} || git checkout -b ${{ github.ref_name }} origin/${{ github.ref_name }}
+
+            # Hard reset to match the latest remote state
             git reset --hard origin/${{ github.ref_name }}
+            git clean -fd  # Remove untracked files
+            git checkout ${{ github.ref_name }}
 
             # Build the Go application
             echo "Building the Go application ..."
