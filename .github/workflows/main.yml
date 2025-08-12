@@ -70,6 +70,3 @@ jobs:
               sudo systemctl restart devapigo.palzoltan.net.service
               sudo systemctl status devapigo.palzoltan.net.service
             fi
-
-      - name: Build
-        run: go build -v ./...
