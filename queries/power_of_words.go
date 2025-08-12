@@ -103,7 +103,7 @@ const (
             SELECT f.id, f.words
             FROM feeds_partitioned f
             WHERE $1 = ANY(f.words)
-                AND f.published BETWEEN $2 AND $3
+                AND f.feed_date BETWEEN $2 AND $3
                 %s
         ),
         co_words AS (
@@ -118,6 +118,7 @@ const (
                     COUNT(*) FILTER (WHERE sentiment_key = 'negative') AS neg_count,
                     COUNT(*) FILTER (WHERE sentiment_key = 'neutral')  AS neu_count
             FROM feed_sentiments
+            WHERE model_id = 1 AND feed_date BETWEEN $2 AND $3
             GROUP BY feed_id
         )
         SELECT
