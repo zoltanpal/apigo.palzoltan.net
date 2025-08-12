@@ -2,16 +2,34 @@ package routes
 
 import (
 	"golang-restapi/handlers"
+	"time"
+
 	//"golang-restapi/middlewares"
 
-	"github.com/gin-gonic/gin"
 	"golang-restapi/config"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
 
 // Function to handle the API routes
 func SetupRoutes(r *gin.Engine, cfg config.Config) {
+	r.Use(cors.New(cors.Config{
+		AllowOrigins: []string{
+			"http://localhost:5000",
+			"http://127.0.0.1:5000",
+			"https://palzoltan.net",
+			"https://pow.palzoltan.net",
+		},
+		AllowMethods:     []string{"GET"}, // "PUT", "DELETE", "PATCH", "POST",  "OPTIONS"
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
 	protected := r.Group("/")
-	// protected.Use(middlewares.AuthMiddleware())
+	//protected.Use(middlewares.Authentication())
 
 	protected.GET("/pow/feed_words", handlers.GetFeedsWords)
 	protected.GET("/pow/get_sentiment_grouped", handlers.GetSentimentGrouped)

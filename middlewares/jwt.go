@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	//"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -82,6 +81,8 @@ func Authentication() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
+		println("cfg.AuthIssuers:", cfg.AuthIssuers, issuer, err)
 
 		// check the issuer is in the list
 		if !utils.IsInList(cfg.AuthIssuers, issuer) {
