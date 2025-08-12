@@ -92,3 +92,17 @@ func BuildToTSQuery(words []string, mode TSMode, prefix bool) (q string, ok bool
 	}
 	return strings.Join(toks, sep), true
 }
+
+// SanitizeTSWord cleans a single string for to_tsquery
+func SanitizeTSWord(w string) string {
+	w = strings.TrimSpace(w)
+	w = strings.Map(func(r rune) rune {
+		switch r {
+		case '&', '|', '!', '(', ')', ':':
+			return ' '
+		default:
+			return r
+		}
+	}, w)
+	return strings.TrimSpace(w)
+}

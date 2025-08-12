@@ -18,4 +18,5 @@ func SetupRoutes(r *gin.Engine, cfg config.Config) {
 	protected.GET("/pow/count_sentiments", handlers.CountSentiments)
 	protected.GET("/pow/top_feeds", handlers.TopFeeds)
 	protected.GET("/pow/bias_detection", handlers.BiasDetection)
+	protected.GET("/pow/correlation_between_sources_avg_compound", handlers.CorrelationBetweenSourcesAvgCompound)
 }

@@ -65,3 +65,9 @@ type BiasDetectionRow struct {
 	NetSentimentScore float64 `json:"net_sentiment_score"`
 	SentimentStdDev   float64 `json:"sentiment_std_dev"`
 }
+
+type CorrelationRow struct {
+	SourceName  string  `json:"sourcename"`
+	Month       string  `json:"month"`
+	AvgCompound float64 `json:"avg_compound"`
+}

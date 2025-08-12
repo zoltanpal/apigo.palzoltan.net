@@ -4,11 +4,14 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
-	"github.com/lib/pq"
 	"golang-restapi/db"
 	"golang-restapi/models"
 	"golang-restapi/queries"
+	"golang-restapi/utils"
+
+	"github.com/lib/pq"
 )
 
 // GetFeedsWords returns all feed words between startDate and endDate.
@@ -173,6 +176,54 @@ func BiasDetection(
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("BiasDetection: rows iteration error: %w", err)
+	}
+	return out, nil
+}
+
+// CorrelationBetweenSourcesAvgCompound computes the monthly average sentiment_compound per source.
+func CorrelationBetweenSourcesAvgCompound(
+	ctx context.Context,
+	startDate, endDate string,
+	word string,
+	sources []int, // optional
+) ([]models.CorrelationRow, error) {
+
+	w := utils.SanitizeTSWord(word)
+	if w == "" || strings.Contains(w, " ") {
+		return nil, fmt.Errorf("correlation: 'word' must be a single non-empty string")
+	}
+
+	args := []any{
+		w,                       // $1
+		startDate + " 00:00:00", // $2
+		endDate + " 23:59:59",   // $3
+	}
+	extra := ""
+	if len(sources) > 0 {
+		extra = " AND f.source_id = ANY($4)"
+		args = append(args, pq.Array(sources))
+	}
+
+	sql := fmt.Sprintf(queries.CorrelationBetweenSourcesAvgCompound, extra)
+
+	rows, err := db.DB.QueryContext(ctx, sql, args...)
+	if err != nil {
+		return nil, fmt.Errorf("correlation(single): query error: %w", err)
+	}
+	defer rows.Close()
+
+	out := make([]models.CorrelationRow, 0, 64)
+	for rows.Next() {
+		var r models.CorrelationRow
+		var month time.Time
+		if err := rows.Scan(&r.SourceName, &month, &r.AvgCompound); err != nil {
+			return nil, fmt.Errorf("correlation(single): scan error: %w", err)
+		}
+		r.Month = month.Format("2006-01-02")
+		out = append(out, r)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("correlation(single): rows iteration error: %w", err)
 	}
 	return out, nil
 }

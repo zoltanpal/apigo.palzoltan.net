@@ -81,4 +81,20 @@ const (
         GROUP BY s.name, iw.input_word
         ORDER BY iw.input_word, net_sentiment_score DESC;
     `
+
+	// CorrelationBetweenSourcesAvgCompound
+	CorrelationBetweenSourcesAvgCompound = `
+        SELECT
+            s.name AS sourcename,
+            date_trunc('month', f.published)::date AS month,
+            COALESCE(AVG(fs.sentiment_compound), 0) AS avg_compound
+        FROM feeds f
+        LEFT JOIN feed_sentiments fs ON f.id = fs.feed_id
+        LEFT JOIN sources s ON f.source_id = s.id
+        WHERE f.search_vector @@ to_tsquery('hungarian', $1)
+            AND f.published BETWEEN $2 AND $3
+            %s
+        GROUP BY s.name, month
+        ORDER BY s.name, month
+    `
 )

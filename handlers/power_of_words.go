@@ -187,3 +187,53 @@ func BiasDetection(c *gin.Context) {
 
 	c.JSON(http.StatusOK, rows)
 }
+
+// CorrelationBetweenSourcesAvgCompound GET /correlation_between_sources_avg_compound
+func CorrelationBetweenSourcesAvgCompound(c *gin.Context) {
+	const layout = "2006-01-02"
+
+	start := c.Query("start_date")
+	end := c.Query("end_date")
+	if start == "" || end == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "start_date and end_date are required (YYYY-MM-DD)"})
+		return
+	}
+	if _, err := time.Parse(layout, start); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid start_date format"})
+		return
+	}
+	if _, err := time.Parse(layout, end); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid end_date format"})
+		return
+	}
+
+	word := strings.TrimSpace(c.Query("word"))
+	if word == "" || len(strings.Fields(word)) != 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "word is required and must be a single token"})
+		return
+	}
+
+	// sources: optional, CSV or repeated ints
+	srcIDs := []int{}
+	if arr := c.QueryArray("sources"); len(arr) > 0 {
+		for _, s := range arr {
+			if v, err := strconv.Atoi(s); err == nil {
+				srcIDs = append(srcIDs, v)
+			}
+		}
+	} else {
+		srcIDs = utils.ParseIntList(c.Query("sources"))
+	}
+
+	rows, err := repositories.CorrelationBetweenSourcesAvgCompound(
+		c.Request.Context(),
+		start, end,
+		word,
+		srcIDs,
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to compute correlation"})
+		return
+	}
+	c.JSON(http.StatusOK, rows)
+}
