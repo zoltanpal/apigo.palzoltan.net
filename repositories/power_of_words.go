@@ -227,3 +227,53 @@ func CorrelationBetweenSourcesAvgCompound(
 	}
 	return out, nil
 }
+
+// WordCoOccurrences returns the top co-occurring words with a given `word`.
+func WordCoOccurrences(
+	ctx context.Context,
+	startDate, endDate string,
+	word string,
+	sources []int, // optional
+) ([]models.WordCoOccurrenceRow, error) {
+	if word == "" {
+		return nil, fmt.Errorf("word is required")
+	}
+
+	args := []any{
+		word,                    // $1
+		startDate + " 00:00:00", // $2
+		endDate + " 23:59:59",   // $3
+	}
+	extra := ""
+	if len(sources) > 0 {
+		extra = " AND f.source_id = ANY($4)"
+		args = append(args, pq.Array(sources))
+	}
+
+	sql := fmt.Sprintf(queries.WordCoOccurrences, extra)
+
+	rows, err := db.DB.QueryContext(ctx, sql, args...)
+	if err != nil {
+		return nil, fmt.Errorf("WordCoOccurrences: query error: %w", err)
+	}
+	defer rows.Close()
+
+	out := make([]models.WordCoOccurrenceRow, 0, 64)
+	for rows.Next() {
+		var r models.WordCoOccurrenceRow
+		if err := rows.Scan(
+			&r.CoWord,
+			&r.CoOccurrence,
+			&r.PositiveCount,
+			&r.NegativeCount,
+			&r.NeutralCount,
+		); err != nil {
+			return nil, fmt.Errorf("WordCoOccurrences: scan error: %w", err)
+		}
+		out = append(out, r)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("WordCoOccurrences: rows iteration error: %w", err)
+	}
+	return out, nil
+}

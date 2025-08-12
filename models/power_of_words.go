@@ -71,3 +71,11 @@ type CorrelationRow struct {
 	Month       string  `json:"month"`
 	AvgCompound float64 `json:"avg_compound"`
 }
+
+type WordCoOccurrenceRow struct {
+	CoWord        string `json:"co_word"`
+	CoOccurrence  int    `json:"co_occurrence"`
+	PositiveCount int    `json:"positive_count"`
+	NegativeCount int    `json:"negative_count"`
+	NeutralCount  int    `json:"neutral_count"`
+}

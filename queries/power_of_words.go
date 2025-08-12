@@ -48,7 +48,7 @@ const (
             fs.sentiment_value,
             fs.sentiment_compound
         FROM feed_sentiments fs
-        JOIN feeds   f ON fs.feed_id  = f.id
+        JOIN feeds_partitioned   f ON fs.feed_id  = f.id
         JOIN sources s ON f.source_id = s.id
         WHERE fs.model_id = 1
             AND f.feed_date BETWEEN $1 AND $2
@@ -72,7 +72,7 @@ const (
                 / NULLIF(COUNT(*), 0)::double precision
             )::double precision AS net_sentiment_score,
             COALESCE(STDDEV(fs.sentiment_value)::double precision, 0)::double precision AS sentiment_std_dev
-        FROM feeds f
+        FROM feeds_partitioned f
         JOIN feed_sentiments fs ON fs.feed_id = f.id AND fs.model_id = 1
         JOIN sources s          ON f.source_id = s.id
         CROSS JOIN input_words iw
@@ -88,7 +88,7 @@ const (
             s.name AS sourcename,
             date_trunc('month', f.published)::date AS month,
             COALESCE(AVG(fs.sentiment_compound), 0) AS avg_compound
-        FROM feeds f
+        FROM feeds_partitioned f
         LEFT JOIN feed_sentiments fs ON f.id = fs.feed_id
         LEFT JOIN sources s ON f.source_id = s.id
         WHERE f.search_vector @@ to_tsquery('hungarian', $1)
@@ -96,5 +96,41 @@ const (
             %s
         GROUP BY s.name, month
         ORDER BY s.name, month
+    `
+
+	WordCoOccurrences = `
+        WITH target_articles AS (
+            SELECT f.id, f.words
+            FROM feeds_partitioned f
+            WHERE $1 = ANY(f.words)
+                AND f.published BETWEEN $2 AND $3
+                %s
+        ),
+        co_words AS (
+            SELECT ta.id AS feed_id, w AS co_word
+            FROM target_articles ta,
+                unnest(ta.words) AS w
+            WHERE w <> $1
+        ),
+        sentiments AS (
+            SELECT feed_id,
+                    COUNT(*) FILTER (WHERE sentiment_key = 'positive') AS pos_count,
+                    COUNT(*) FILTER (WHERE sentiment_key = 'negative') AS neg_count,
+                    COUNT(*) FILTER (WHERE sentiment_key = 'neutral')  AS neu_count
+            FROM feed_sentiments
+            GROUP BY feed_id
+        )
+        SELECT
+            cw.co_word,
+            COUNT(*) AS co_occurrence,
+            COALESCE(SUM(s.pos_count), 0) AS positive_count,
+            COALESCE(SUM(s.neg_count), 0) AS negative_count,
+            COALESCE(SUM(s.neu_count), 0) AS neutral_count
+            FROM co_words cw
+            LEFT JOIN sentiments s ON cw.feed_id = s.feed_id
+        GROUP BY cw.co_word
+        HAVING COUNT(*) > 1
+        ORDER BY co_occurrence DESC
+        LIMIT 30;
     `
 )
