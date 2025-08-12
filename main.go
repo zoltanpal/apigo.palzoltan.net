@@ -31,7 +31,7 @@ func main() {
 	// Register your routes
 	routes.SetupRoutes(router, cfg)
 
-	if err := router.Run(":8080"); err != nil {
+	if err := router.Run(":1985"); err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 	}
 }
