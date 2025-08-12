@@ -56,4 +56,29 @@ const (
         ORDER BY fs.sentiment_value DESC
         LIMIT $4
     `
+
+	// BiasDetection
+	BiasDetection = `
+        WITH input_words AS (
+            SELECT unnest($1::text[]) AS input_word
+        )
+        SELECT
+            s.name AS source_name,
+            iw.input_word AS keyword,
+            COUNT(*) AS mention_count,
+            (
+                (SUM(CASE WHEN fs.sentiment_key = 'positive' THEN fs.sentiment_value ELSE 0 END)
+            - SUM(CASE WHEN fs.sentiment_key = 'negative' THEN fs.sentiment_value ELSE 0 END))
+                / NULLIF(COUNT(*), 0)::double precision
+            )::double precision AS net_sentiment_score,
+            COALESCE(STDDEV(fs.sentiment_value)::double precision, 0)::double precision AS sentiment_std_dev
+        FROM feeds f
+        JOIN feed_sentiments fs ON fs.feed_id = f.id AND fs.model_id = 1
+        JOIN sources s          ON f.source_id = s.id
+        CROSS JOIN input_words iw
+        WHERE f.published BETWEEN $2 AND $3
+            AND f.search_vector @@ to_tsquery('hungarian', iw.input_word || ':*')
+        GROUP BY s.name, iw.input_word
+        ORDER BY iw.input_word, net_sentiment_score DESC;
+    `
 )

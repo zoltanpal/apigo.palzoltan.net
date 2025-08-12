@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/lib/pq"
 	"golang-restapi/db"
 	"golang-restapi/models"
 	"golang-restapi/queries"
@@ -126,6 +127,52 @@ func TopFeeds(ctx context.Context, startDate, endDate, posNeg string, limit int)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("TopFeeds: rows iteration error: %w", err)
+	}
+	return out, nil
+}
+
+// BiasDetection
+func BiasDetection(
+	ctx context.Context,
+	startDate, endDate string,
+	words []string,
+) ([]models.BiasDetectionRow, error) {
+
+	if len(words) == 0 {
+		return nil, fmt.Errorf("BiasDetection: words must not be empty")
+	}
+
+	// $1 words[], $2 start, $3 end
+	args := []any{
+		pq.Array(words),
+		startDate + " 00:00:00",
+		endDate + " 23:59:59",
+	}
+
+	sql := fmt.Sprintf(queries.BiasDetection)
+
+	rows, err := db.DB.QueryContext(ctx, sql, args...)
+	if err != nil {
+		return nil, fmt.Errorf("BiasDetection: query error: %w", err)
+	}
+	defer rows.Close()
+
+	out := make([]models.BiasDetectionRow, 0, 128)
+	for rows.Next() {
+		var r models.BiasDetectionRow
+		if err := rows.Scan(
+			&r.SourceName,
+			&r.Keyword,
+			&r.MentionCount,
+			&r.NetSentimentScore,
+			&r.SentimentStdDev,
+		); err != nil {
+			return nil, fmt.Errorf("BiasDetection: scan error: %w", err)
+		}
+		out = append(out, r)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("BiasDetection: rows iteration error: %w", err)
 	}
 	return out, nil
 }

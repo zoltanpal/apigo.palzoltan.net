@@ -47,3 +47,48 @@ func ParseStringList(s string) []string {
 	}
 	return out
 }
+
+type TSMode string
+
+const (
+	TSOr  TSMode = "OR"
+	TSAnd TSMode = "AND"
+)
+
+// BuildToTSQuery builds a to_tsquery string like "w1 & w2" (AND) or "w1 | w2" (OR).
+// If prefix==true, appends :* to each token for right-truncation (prefix match).
+// Returns ok=false if nothing usable remains after trimming.
+func BuildToTSQuery(words []string, mode TSMode, prefix bool) (q string, ok bool) {
+	toks := make([]string, 0, len(words))
+	for _, w := range words {
+		w = strings.TrimSpace(w)
+		if w == "" {
+			continue
+		}
+		// light sanitation: strip tsquery operator chars to avoid syntax errors
+		w = strings.Map(func(r rune) rune {
+			switch r {
+			case '&', '|', '!', '(', ')', ':':
+				return ' '
+			default:
+				return r
+			}
+		}, w)
+		w = strings.TrimSpace(w)
+		if w == "" {
+			continue
+		}
+		if prefix {
+			w += ":*"
+		}
+		toks = append(toks, w)
+	}
+	if len(toks) == 0 {
+		return "", false
+	}
+	sep := " | "
+	if mode == TSAnd {
+		sep = " & "
+	}
+	return strings.Join(toks, sep), true
+}

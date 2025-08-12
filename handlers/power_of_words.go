@@ -146,3 +146,44 @@ func TopFeeds(c *gin.Context) {
 
 	c.JSON(http.StatusOK, rows)
 }
+
+// BiasDetection GET /bias_detection?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD&words=a,b,c[&sources=1,2]
+func BiasDetection(c *gin.Context) {
+	const layout = "2006-01-02"
+
+	start := c.Query("start_date")
+	end := c.Query("end_date")
+	if start == "" || end == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "start_date and end_date are required (YYYY-MM-DD)"})
+		return
+	}
+	if _, err := time.Parse(layout, start); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid start_date format"})
+		return
+	}
+	if _, err := time.Parse(layout, end); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid end_date format"})
+		return
+	}
+
+	words := c.QueryArray("words")
+	if len(words) == 0 {
+		words = utils.ParseStringList(c.Query("words"))
+	}
+	if len(words) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "words is required"})
+		return
+	}
+
+	rows, err := repositories.BiasDetection(
+		c.Request.Context(),
+		start, end,
+		words,
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to compute bias detection"})
+		return
+	}
+
+	c.JSON(http.StatusOK, rows)
+}

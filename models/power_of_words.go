@@ -57,3 +57,11 @@ type TopFeedRow struct {
 	SentimentValue    float64   `json:"sentiment_value"`
 	SentimentCompound float64   `json:"sentiment_compound"`
 }
+
+type BiasDetectionRow struct {
+	SourceName        string  `json:"source_name"`
+	Keyword           string  `json:"keyword"`
+	MentionCount      int     `json:"mention_count"`
+	NetSentimentScore float64 `json:"net_sentiment_score"`
+	SentimentStdDev   float64 `json:"sentiment_std_dev"`
+}
