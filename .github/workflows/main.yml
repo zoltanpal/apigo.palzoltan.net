@@ -63,7 +63,7 @@ jobs:
 
             # Build the Go application
             echo "Building the Go application ..."
-            sudo systemctl daemon-reload
+            go build -o .
 
             if [ "$ENV" == "prod" ]; then
               echo "Starting the production API service ..."
