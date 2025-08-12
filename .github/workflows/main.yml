@@ -61,6 +61,10 @@ jobs:
             git clean -fd  # Remove untracked files
             git checkout ${{ github.ref_name }}
 
+            # Build the Go application
+            echo "Building the Go application ..."
+            sudo systemctl daemon-reload
+
             if [ "$ENV" == "prod" ]; then
               echo "Starting the production API service ..."
               sudo systemctl restart apigo.palzoltan.net.service
