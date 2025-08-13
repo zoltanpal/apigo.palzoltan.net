@@ -24,7 +24,7 @@ jobs:
       SVC: ${{ github.event.inputs.environment == 'prod' && 'apigo.palzoltan.net.service' || 'devapigo.palzoltan.net.service' }}
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Set up Go
@@ -32,12 +32,12 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
-      - name: Build linux binary
+      - name: Build Linux Binary
         run: |
           GOOS=linux GOARCH=amd64 CGO_ENABLED=0 \
           go build -ldflags="-s -w" -o "$BINARY_NAME" .
       
-      - name: Upload binary to server
+      - name: Upload Binary to Server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -46,7 +46,7 @@ jobs:
           source: "${{ env.BINARY_NAME }}"
           target: "${{ env.WORK_DIR }}"
       
-      - name: Service setup
+      - name: Setup Permission & Owner
         uses: appleboy/ssh-action@v1.1.0
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -57,7 +57,7 @@ jobs:
             chmod 755 "${{ env.BINARY_NAME }}"
             chown www-data:www-data "${{ env.BINARY_NAME }}"
 
-      - name: Restart service
+      - name: Restart Service
         uses: appleboy/ssh-action@v1.1.0
         with:
           host: ${{ secrets.SERVER_HOST }}
