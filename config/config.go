@@ -10,16 +10,16 @@ import (
 
 // Config holds application configuration
 type Config struct {
-	DBHost        string
-	DBPort        string
-	DBUser        string
-	DBPassword    string
-	DBName        string
-	AuthIssuers   []string
-	AuthEmails    []string
-	USGS_API_HOST string
-	IMDB_BASE_URL string
-	IMDB_API_KEY  string
+	DBHost      string
+	DBPort      string
+	DBUser      string
+	DBPassword  string
+	DBName      string
+	AuthIssuers []string
+	AuthEmails  []string
+	USGSApiHost string
+	IMDBApiHost string
+	IMDBApiKey  string
 }
 
 // LoadConfig loads environment variables from .env
@@ -40,15 +40,15 @@ func LoadConfig() Config {
 	}
 
 	return Config{
-		DBHost:        os.Getenv("DB_HOST"),
-		DBPort:        os.Getenv("DB_PORT"),
-		DBUser:        os.Getenv("DB_USER"),
-		DBPassword:    os.Getenv("DB_PASSWORD"),
-		DBName:        os.Getenv("DB_NAME"),
-		AuthIssuers:   issuers,
-		AuthEmails:    emails,
-		USGS_API_HOST: os.Getenv("USGS_API_HOST"),
-		IMDB_BASE_URL: os.Getenv("IMDB_BASE_URL"),
-		IMDB_API_KEY:  os.Getenv("IMDB_API_KEY"),
+		DBHost:      os.Getenv("DB_HOST"),
+		DBPort:      os.Getenv("DB_PORT"),
+		DBUser:      os.Getenv("DB_USER"),
+		DBPassword:  os.Getenv("DB_PASSWORD"),
+		DBName:      os.Getenv("DB_NAME"),
+		AuthIssuers: issuers,
+		AuthEmails:  emails,
+		USGSApiHost: os.Getenv("USGS_API_HOST"),
+		IMDBApiHost: os.Getenv("IMDB_BASE_URL"),
+		IMDBApiKey:  os.Getenv("IMDB_API_KEY"),
 	}
 }
