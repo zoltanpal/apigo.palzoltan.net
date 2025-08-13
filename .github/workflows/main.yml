@@ -19,7 +19,7 @@ jobs:
     env:
       ENVIRONMENT: ${{ github.event.inputs.environment }}
       GO_VERSION: '1.23.x'
-      BINARY_NAME: apigo
+      BINARY_NAME: golang-restapi
       WORK_DIR: ${{ github.event.inputs.environment == 'prod' && secrets.PROD_SERVER_DEPLOYMENT_PATH || secrets.DEV_SERVER_DEPLOYMENT_PATH }}
       SVC: ${{ github.event.inputs.environment == 'prod' && 'apigo.palzoltan.net.service' || 'devapigo.palzoltan.net.service' }}
 
