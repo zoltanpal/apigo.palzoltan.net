@@ -29,7 +29,6 @@ func LoadConfig() Config {
 		log.Fatal("Error loading .env file")
 	}
 
-	//log.Fatal(strings.SplitAfter(os.Getenv("ALLOWED_ISSUERS"), ","))
 	var issuers, emails []string
 
 	if envIssuers := os.Getenv("ALLOWED_ISSUERS"); envIssuers != "" {
