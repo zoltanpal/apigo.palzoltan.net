@@ -4,7 +4,7 @@ import (
 	"golang-restapi/handlers"
 	"time"
 
-	//"golang-restapi/middlewares"
+	"golang-restapi/middlewares"
 
 	"golang-restapi/config"
 
@@ -12,7 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Function to handle the API routes
+// SetupRoutes # Function to handle the API routes
 func SetupRoutes(r *gin.Engine, cfg config.Config) {
 	r.Use(cors.New(cors.Config{
 		AllowOrigins: []string{
@@ -29,7 +29,7 @@ func SetupRoutes(r *gin.Engine, cfg config.Config) {
 	}))
 
 	protected := r.Group("/")
-	//protected.Use(middlewares.Authentication())
+	protected.Use(middlewares.Authentication())
 
 	protected.GET("/pow/feed_words", handlers.GetFeedsWords)
 	protected.GET("/pow/get_sentiment_grouped", handlers.GetSentimentGrouped)
