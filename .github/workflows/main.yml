@@ -16,6 +16,13 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    env:
+      ENVIRONMENT: ${{ github.event.inputs.environment }}
+      GO_VERSION: '1.23.x'
+      BINARY_NAME: apigo
+      WORK_DIR: ${{ github.event.inputs.environment == 'prod' && secrets.PROD_SERVER_DEPLOYMENT_PATH || secrets.DEV_SERVER_DEPLOYMENT_PATH }}
+      SVC: ${{ github.event.inputs.environment == 'prod' && 'apigo.palzoltan.net.service' || 'devapigo.palzoltan.net.service' }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -23,70 +30,41 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.23.x'
+          go-version: ${{ env.GO_VERSION }}
 
       - name: Build linux binary
         run: |
           GOOS=linux GOARCH=amd64 CGO_ENABLED=0 \
-          go build -ldflags="-s -w" -o apigo .
-
+          go build -ldflags="-s -w" -o "$BINARY_NAME" .
+      
       - name: Upload binary to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          source: "apigo"
-          target: ${{ inputs.environment == 'prod' && secrets.PROD_SERVER_DEPLOYMENT_PATH || secrets.DEV_SERVER_DEPLOYMENT_PATH }}
+          source: "${{ env.BINARY_NAME }}"
+          target: "${{ env.WORK_DIR }}"
+      
+      - name: Service setup
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd "${{ env.WORK_DIR }}"
+            chmod +x "${{ env.BINARY_NAME }}"
+            chown www-data:www-data "${{ env.BINARY_NAME }}"
 
-
-
-      # - name: Deploy to the Server
-      #   uses: appleboy/ssh-action@v1.1.0
-      #   with:
-      #     host: ${{ secrets.SERVER_HOST }}
-      #     username: ${{ secrets.SERVER_USER }}
-      #     key: ${{ secrets.SERVER_SSH_KEY }}
-      #     script: |
-      #       ENV=${{ github.event.inputs.environment }}
-
-      #       # navigate to the work directory
-      #       if [ "$ENV" == "prod" ]; then
-      #         echo "Deploying to production..."
-      #         WORK_DIR=${{ secrets.PROD_SERVER_DEPLOYMENT_PATH }}
-      #         cd ${{ secrets.PROD_SERVER_DEPLOYMENT_PATH }}
-      #         git config --global --add safe.directory ${{ secrets.PROD_SERVER_DEPLOYMENT_PATH }}
-      #       else
-      #         echo "Deploying to development..."
-      #         WORK_DIR=${{ secrets.DEV_SERVER_DEPLOYMENT_PATH }}
-      #         cd ${{ secrets.DEV_SERVER_DEPLOYMENT_PATH }}
-      #         git config --global --add safe.directory ${{ secrets.DEV_SERVER_DEPLOYMENT_PATH }}
-      #       fi
-
-      #       # Clone repo if missing
-      #       if [ ! -d ".git" ]; then
-      #         git clone https://github.com/zoltanpal/apigo.palzoltan.net.git .
-      #         git checkout ${{ github.ref_name }}
-      #       fi
-
-      #       # Fetch latest changes
-      #       git fetch origin
-
-      #       # Hard reset to match the latest remote state
-      #       git reset --hard origin/${{ github.ref_name }}
-      #       git clean -fd  # Remove untracked files
-      #       git checkout ${{ github.ref_name }}
-
-      #       # Build the Go application
-      #       echo "Building the Go application ..."
-      #       go build -o .
-
-      #       if [ "$ENV" == "prod" ]; then
-      #         echo "Starting the production API service ..."
-      #         sudo systemctl restart apigo.palzoltan.net.service
-      #         sudo systemctl status apigo.palzoltan.net.service
-      #       else
-      #         echo "Starting the development API service ..."
-      #         sudo systemctl restart devapigo.palzoltan.net.service
-      #         sudo systemctl status devapigo.palzoltan.net.service
-      #       fi
+      - name: Restart service
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd "${{ env.WORK_DIR }}"
+            chmod +x "${{ env.BINARY_NAME }}"
+            sudo systemctl restart "${{ env.SVC }}"
+            sudo systemctl status "${{ env.SVC }}" --no-pager -l
