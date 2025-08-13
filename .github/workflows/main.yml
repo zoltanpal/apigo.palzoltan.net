@@ -37,6 +37,15 @@ jobs:
           GOOS=linux GOARCH=amd64 CGO_ENABLED=0 \
           go build -ldflags="-s -w" -o "$BINARY_NAME" .
       
+      - name: Install UPX
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y upx
+
+      - name: Compress binary with UPX
+        run: |
+          upx --best --lzma "$BINARY_NAME"
+
       - name: Upload Binary to Server
         uses: appleboy/scp-action@v0.1.7
         with:
