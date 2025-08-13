@@ -54,7 +54,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             cd "${{ env.WORK_DIR }}"
-            chmod +x "${{ env.BINARY_NAME }}"
+            chmod 755 "${{ env.BINARY_NAME }}"
             chown www-data:www-data "${{ env.BINARY_NAME }}"
 
       - name: Restart service
@@ -64,7 +64,5 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            cd "${{ env.WORK_DIR }}"
-            chmod +x "${{ env.BINARY_NAME }}"
             sudo systemctl restart "${{ env.SVC }}"
             sudo systemctl status "${{ env.SVC }}" --no-pager -l
