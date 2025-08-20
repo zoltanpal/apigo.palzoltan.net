@@ -5,7 +5,7 @@ const (
 	// for all feeds whose feed_date is between two given dates.
 	GetWordsByDateRange = `
         SELECT words
-        FROM feeds_partitioned
+        FROM feeds
         WHERE feed_date BETWEEN $1 AND $2
     `
 
@@ -15,7 +15,7 @@ const (
             f.source_id::text AS group_by,
             COALESCE(fs.sentiment_key, 'none') AS sentiment_key,
             COUNT(f.id) AS count
-        FROM feeds_partitioned f
+        FROM feeds f
         LEFT JOIN feed_sentiments fs
           ON fs.feed_id = f.id AND fs.model_id = 1
     `
@@ -25,7 +25,7 @@ const (
             to_char(f.feed_date, 'YYYY-MM-DD') AS group_by,
             COALESCE(fs.sentiment_key, 'none') AS sentiment_key,
             COUNT(f.id) AS count
-        FROM feeds_partitioned f
+        FROM feeds f
         LEFT JOIN feed_sentiments fs
           ON fs.feed_id = f.id AND fs.model_id = 1
     `
@@ -48,7 +48,7 @@ const (
             fs.sentiment_value,
             fs.sentiment_compound
         FROM feed_sentiments fs
-        JOIN feeds_partitioned   f ON fs.feed_id  = f.id
+        JOIN feeds   f ON fs.feed_id  = f.id
         JOIN sources s ON f.source_id = s.id
         WHERE fs.model_id = 1
             AND f.feed_date BETWEEN $1 AND $2
@@ -72,7 +72,7 @@ const (
                 / NULLIF(COUNT(*), 0)::double precision
             )::double precision AS net_sentiment_score,
             COALESCE(STDDEV(fs.sentiment_value)::double precision, 0)::double precision AS sentiment_std_dev
-        FROM feeds_partitioned f
+        FROM feeds f
         JOIN feed_sentiments fs ON fs.feed_id = f.id AND fs.model_id = 1
         JOIN sources s          ON f.source_id = s.id
         CROSS JOIN input_words iw
@@ -88,7 +88,7 @@ const (
             s.name AS sourcename,
             date_trunc('month', f.published)::date AS month,
             COALESCE(AVG(fs.sentiment_compound), 0) AS avg_compound
-        FROM feeds_partitioned f
+        FROM feeds f
         LEFT JOIN feed_sentiments fs ON f.id = fs.feed_id
         LEFT JOIN sources s ON f.source_id = s.id
         WHERE f.search_vector @@ to_tsquery('hungarian', $1)
@@ -101,7 +101,7 @@ const (
 	WordCoOccurrences = `
         WITH target_articles AS (
             SELECT f.id, f.words
-            FROM feeds_partitioned f
+            FROM feeds f
             WHERE $1 = ANY(f.words)
                 AND f.feed_date BETWEEN $2 AND $3
                 %s
