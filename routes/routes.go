@@ -31,7 +31,7 @@ func SetupRoutes(r *gin.Engine, cfg config.Config) {
 	protected := r.Group("/")
 	//protected.Use(middlewares.Authentication())
 
-	protected.GET("/pow/feed_words", handlers.GetFeedsWords)
+	protected.GET("/pow/most_common_words", handlers.MostCommonWordsHandler)
 	protected.GET("/pow/get_sentiment_grouped", handlers.GetSentimentGrouped)
 	protected.GET("/pow/count_sentiments", handlers.CountSentiments)
 	protected.GET("/pow/top_feeds", handlers.TopFeeds)

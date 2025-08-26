@@ -11,33 +11,34 @@ import (
 	"golang-restapi/utils"
 )
 
-// GetFeedsWords handles GET /pow/words?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD
-func GetFeedsWords(c *gin.Context) {
-	startDateStr := c.Query("start_date")
-	endDateStr := c.Query("end_date")
-	if startDateStr == "" || endDateStr == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Query parameters start_date and end_date are required (format: YYYY-MM-DD)",
-		})
-		return
-	}
-
+// GET /most_common_words?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD&nm_common=20
+func MostCommonWordsHandler(c *gin.Context) {
 	const layout = "2006-01-02"
-	if _, err := time.Parse(layout, startDateStr); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid start_date format. Use YYYY-MM-DD"})
+
+	start := c.Query("start_date")
+	end := c.Query("end_date")
+	nmStr := c.DefaultQuery("nm_common", "20")
+
+	if _, err := time.Parse(layout, start); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid start_date"})
 		return
 	}
-	if _, err := time.Parse(layout, endDateStr); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid end_date format. Use YYYY-MM-DD"})
+	if _, err := time.Parse(layout, end); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid end_date"})
 		return
 	}
 
-	words, err := repositories.GetFeedsWords(startDateStr, endDateStr)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch feed words"})
+	n, err := strconv.Atoi(nmStr)
+	if err != nil || n <= 0 {
+		n = 20
+	}
+
+	result, repoErr := repositories.MostCommonWords(c.Request.Context(), start, end, n)
+	if repoErr != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": repoErr.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, words)
+	c.JSON(http.StatusOK, result)
 }
 
 // GetSentimentGrouped handles GET /pow/get_sentiment_grouped?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD

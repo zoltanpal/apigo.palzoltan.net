@@ -2,7 +2,9 @@ package repositories
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -14,26 +16,55 @@ import (
 	"github.com/lib/pq"
 )
 
-// GetFeedsWords returns all feed words between startDate and endDate.
-func GetFeedsWords(startDate, endDate string) ([]models.FeedWord, error) {
-	rows, err := db.DB.Query(queries.GetWordsByDateRange, startDate, endDate)
+// MostCommonWords fetches feed words, filters stopwords, and counts occurrences.
+func MostCommonWords(ctx context.Context, startDate, endDate string, n int) ([]models.WordCount, error) {
+	rows, err := db.DB.QueryContext(ctx, queries.GetWordsByDateRange, startDate, endDate)
 	if err != nil {
-		return nil, fmt.Errorf("GetFeedsWords: query error: %w", err)
+		return nil, fmt.Errorf("MostCommonWords: query error: %w", err)
 	}
 	defer rows.Close()
 
-	var words []models.FeedWord
+	counts := make(map[string]int)
+
 	for rows.Next() {
-		var fw models.FeedWord
-		if err := rows.Scan(&fw.Word); err != nil {
-			return nil, fmt.Errorf("GetFeedsWords: scan error: %w", err)
+		var words []sql.NullString
+		if err := rows.Scan(pq.Array(&words)); err != nil {
+			return nil, fmt.Errorf("MostCommonWords: scan error: %w", err)
 		}
-		words = append(words, fw)
+		for _, w := range words {
+			if !w.Valid {
+				continue
+			}
+			word := w.String
+			if utils.IsStopword(word) {
+				continue
+			}
+			counts[word]++
+		}
 	}
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("GetFeedsWords: rows iteration error: %w", err)
+		return nil, fmt.Errorf("MostCommonWords: rows iteration error: %w", err)
 	}
-	return words, nil
+
+	// convert map -> slice
+	result := make([]models.WordCount, 0, len(counts))
+	for word, count := range counts {
+		if count < 2 {
+			continue // skip rare words
+		}
+		result = append(result, models.WordCount{Word: word, Count: count})
+	}
+
+	// sort by frequency
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Count > result[j].Count
+	})
+
+	// take top N
+	if n < len(result) {
+		result = result[:n]
+	}
+	return result, nil
 }
 
 // GetSentimentGrouped returns grouped sentiment counts

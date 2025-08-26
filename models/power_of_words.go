@@ -7,6 +7,11 @@ type FeedWord struct {
 	Word string `json:"word"`
 }
 
+type WordCount struct {
+	Word  string `json:"word"`
+	Count int    `json:"count"`
+}
+
 // Feed represents a row in the feeds table.
 type Feed struct {
 	ID        int       `json:"id"`
