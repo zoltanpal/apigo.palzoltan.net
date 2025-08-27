@@ -265,9 +265,6 @@ func WordCoOccurrences(c *gin.Context) {
 		return
 	}
 
-	println(c.QueryArray("sources"))
-	println(c.Query("sources"))
-
 	// sources
 	srcIDs := []int{}
 	srcIDs = utils.ParseIntList(c.Query("sources"))
