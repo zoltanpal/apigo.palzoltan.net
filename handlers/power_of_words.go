@@ -6,9 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"golang-restapi/repositories"
 	"golang-restapi/utils"
+
+	"github.com/gin-gonic/gin"
 )
 
 // GET /most_common_words?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD&nm_common=20
@@ -264,17 +265,12 @@ func WordCoOccurrences(c *gin.Context) {
 		return
 	}
 
+	println(c.QueryArray("sources"))
+	println(c.Query("sources"))
+
 	// sources
 	srcIDs := []int{}
-	if arr := c.QueryArray("sources"); len(arr) > 0 {
-		for _, s := range arr {
-			if v, err := strconv.Atoi(s); err == nil {
-				srcIDs = append(srcIDs, v)
-			}
-		}
-	} else {
-		srcIDs = utils.ParseIntList(c.Query("sources"))
-	}
+	srcIDs = utils.ParseIntList(c.Query("sources"))
 
 	rows, err := repositories.WordCoOccurrences(
 		c.Request.Context(),

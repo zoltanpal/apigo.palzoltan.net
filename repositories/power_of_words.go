@@ -280,6 +280,7 @@ func WordCoOccurrences(
 		extra = " AND f.source_id = ANY($4)"
 		args = append(args, pq.Array(sources))
 	}
+	println("extra:", extra)
 
 	sql := fmt.Sprintf(queries.WordCoOccurrences, extra)
 
