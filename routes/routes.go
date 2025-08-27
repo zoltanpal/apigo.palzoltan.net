@@ -18,8 +18,11 @@ func SetupRoutes(r *gin.Engine, cfg config.Config) {
 		AllowOrigins: []string{
 			"http://localhost:5000",
 			"http://127.0.0.1:5000",
+			"http://localhost:3000",
+			"http://127.0.0.1:3000",
 			"https://palzoltan.net",
 			"https://pow.palzoltan.net",
+			"http://devpow.palzoltan.net",
 		},
 		AllowMethods:     []string{"GET"}, // "PUT", "DELETE", "PATCH", "POST",  "OPTIONS"
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
