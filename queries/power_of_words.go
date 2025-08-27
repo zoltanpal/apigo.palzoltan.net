@@ -76,7 +76,7 @@ const (
         JOIN feed_sentiments fs ON fs.feed_id = f.id AND fs.model_id = 1
         JOIN sources s          ON f.source_id = s.id
         CROSS JOIN input_words iw
-        WHERE f.published BETWEEN $2 AND $3
+        WHERE f.feed_date BETWEEN $2 AND $3
             AND f.search_vector @@ to_tsquery('hungarian', iw.input_word || ':*')
         GROUP BY s.name, iw.input_word
         ORDER BY iw.input_word, net_sentiment_score DESC;
@@ -92,7 +92,7 @@ const (
         LEFT JOIN feed_sentiments fs ON f.id = fs.feed_id
         LEFT JOIN sources s ON f.source_id = s.id
         WHERE f.search_vector @@ to_tsquery('hungarian', $1)
-            AND f.published BETWEEN $2 AND $3
+            AND f.feed_date BETWEEN $2 AND $3 AND fs.feed_date BETWEEN $2 AND $3
             %s
         GROUP BY s.name, month
         ORDER BY s.name, month
