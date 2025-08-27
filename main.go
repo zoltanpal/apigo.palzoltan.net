@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-
 	"golang-restapi/config"
 	"golang-restapi/db"
 	"golang-restapi/middlewares"
@@ -27,6 +27,17 @@ func main() {
 		gin.Recovery(),
 		middlewares.ErrorLogger(),
 	)
+
+	// --- CORS ---
+	//allowed := splitAndTrim(cfg.CORSAllowedOrigins)
+	corsCfg := cors.Config{
+		AllowOrigins:  []string{"https://pow.palzoltan.net", "http://devpow.palzoltan.net", "http://localhost:3000"},
+		AllowMethods:  []string{"GET", "POST"},
+		AllowHeaders:  []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders: []string{"Content-Length"},
+	}
+	router.Use(cors.New(corsCfg))
+	// -------------
 
 	// Register your routes
 	routes.SetupRoutes(router, cfg)
