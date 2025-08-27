@@ -169,18 +169,18 @@ func TopFeeds(ctx context.Context, startDate, endDate, posNeg string, limit int)
 func BiasDetection(
 	ctx context.Context,
 	startDate, endDate string,
-	words []string,
+	word string,
 ) ([]models.BiasDetectionRow, error) {
 
-	if len(words) == 0 {
-		return nil, fmt.Errorf("BiasDetection: words must not be empty")
+	w := utils.SanitizeTSWord(word)
+	if w == "" || strings.Contains(w, " ") {
+		return nil, fmt.Errorf("BiasDetection: 'word' must be a single non-empty string")
 	}
 
-	// $1 words[], $2 start, $3 end
 	args := []any{
-		pq.Array(words),
-		startDate + " 00:00:00",
-		endDate + " 23:59:59",
+		w,                       // $1
+		startDate + " 00:00:00", // $2
+		endDate + " 23:59:59",   // $3
 	}
 
 	sql := fmt.Sprintf(queries.BiasDetection)

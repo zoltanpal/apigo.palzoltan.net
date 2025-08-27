@@ -168,19 +168,16 @@ func BiasDetection(c *gin.Context) {
 		return
 	}
 
-	words := c.QueryArray("words")
-	if len(words) == 0 {
-		words = utils.ParseStringList(c.Query("words"))
-	}
-	if len(words) == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "words is required"})
+	word := strings.TrimSpace(c.Query("word"))
+	if word == "" || len(strings.Fields(word)) != 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "word is required and must be a single token"})
 		return
 	}
 
 	rows, err := repositories.BiasDetection(
 		c.Request.Context(),
 		start, end,
-		words,
+		word,
 	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to compute bias detection"})
