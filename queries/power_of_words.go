@@ -87,7 +87,7 @@ const (
         FROM feeds f
         JOIN feed_sentiments fs ON fs.feed_id = f.id AND fs.model_id = 1 AND fs.feed_date BETWEEN $2 AND $3
         LEFT JOIN sources s ON f.source_id = s.id
-        WHERE f.search_vector @@ to_tsquery('hungarian', $1)
+        WHERE f.search_vector @@ to_tsquery('public.hun_unaccent', $1)
             AND f.feed_date BETWEEN $2 AND $3 AND fs.feed_date BETWEEN $2 AND $3
             %s
         GROUP BY s.name, month
