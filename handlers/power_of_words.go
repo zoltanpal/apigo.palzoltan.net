@@ -12,6 +12,48 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// GET /feeds?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD&sources=1,2&free_text=word&page=1&items_per_page=30
+func GetFeeds(c *gin.Context) {
+	const layout = "2006-01-02"
+
+	start := c.Query("start_date")
+	end := c.Query("end_date")
+
+	if start == "" || end == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "start_date and end_date are required"})
+		return
+	}
+	if _, err := time.Parse(layout, start); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid start_date format"})
+		return
+	}
+	if _, err := time.Parse(layout, end); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid end_date format"})
+		return
+	}
+
+	srcIDs := utils.ParseIntList(c.Query("sources"))
+
+	freeText := c.Query("free_text")
+
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	perPage, _ := strconv.Atoi(c.DefaultQuery("items_per_page", "30"))
+
+	resp, err := repositories.GetFeeds(
+		c.Request.Context(),
+		start, end,
+		srcIDs,
+		freeText,
+		page, perPage,
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
+}
+
 // GET /most_common_words?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD&nm_common=20
 func MostCommonWordsHandler(c *gin.Context) {
 	const layout = "2006-01-02"

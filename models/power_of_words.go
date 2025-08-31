@@ -15,18 +15,20 @@ type WordCount struct {
 // Feed represents a row in the feeds table.
 type Feed struct {
 	ID        int       `json:"id"`
-	Published time.Time `json:"published"`
-	Words     []string  `json:"words"`
 	Title     string    `json:"title"`
+	Link      string    `json:"link"`
 	SourceID  int       `json:"source_id"`
+	Words     []string  `json:"words"`
+	Published time.Time `json:"published"`
 }
 
 // FeedSentiment represents a row in the feed_sentiments table.
 type FeedSentiment struct {
-	ID             int     `json:"id"`
-	SentimentKey   string  `json:"sentiment_key"`
-	SentimentValue float32 `json:"sentiment_value"`
-	Sentiments     string  `json:"sentiments"`
+	ID                int     `json:"id"`
+	SentimentKey      string  `json:"sentiment_key"`
+	SentimentValue    float32 `json:"sentiment_value"`
+	Sentiments        string  `json:"sentiments"`
+	SentimentCompound float32 `json:"sentiment_compound"`
 }
 
 // Source represents a row in the sources table.
@@ -83,4 +85,16 @@ type WordCoOccurrenceRow struct {
 	PositiveCount int    `json:"positive_count"`
 	NegativeCount int    `json:"negative_count"`
 	NeutralCount  int    `json:"neutral_count"`
+}
+
+type FeedWithDetails struct {
+	Feed          Feed          `json:"feed"`
+	FeedSentiment FeedSentiment `json:"feed_sentiment"`
+	Source        Source        `json:"source"`
+}
+
+type FeedResponse struct {
+	Total int               `json:"total"`
+	Page  int               `json:"page"`
+	Feeds []FeedWithDetails `json:"feeds"`
 }
