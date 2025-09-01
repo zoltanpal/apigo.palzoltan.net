@@ -68,7 +68,7 @@ const (
         SELECT
             f.title,
             f.published,
-            s.name,
+            s.name as source_name,
             fs.sentiment_value,
             fs.sentiment_compound
         FROM feed_sentiments fs
