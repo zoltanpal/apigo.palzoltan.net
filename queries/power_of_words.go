@@ -9,7 +9,7 @@ const (
         FROM feeds f
         JOIN feed_sentiments fs ON fs.feed_id = f.id AND fs.model_id = 1
         JOIN sources s ON f.source_id = s.id
-        WHERE f.published BETWEEN $1 AND $2
+        WHERE f.feed_date BETWEEN $1 AND $2
         %s
         ORDER BY f.published DESC
         LIMIT $%d OFFSET $%d
@@ -21,7 +21,7 @@ const (
             FROM feeds f
             JOIN feed_sentiments fs ON fs.feed_id = f.id AND fs.model_id = 1
             JOIN sources s ON f.source_id = s.id
-            WHERE f.published BETWEEN $1 AND $2
+            WHERE f.feed_date BETWEEN $1 AND $2
             %s
         `
 
