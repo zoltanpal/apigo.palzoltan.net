@@ -2,18 +2,18 @@ package queries
 
 const (
 	FeedsBaseQuery = `
-            SELECT
-                f.id, f.title, f.link, f.source_id, f.words, f.published,
-                fs.id, fs.feed_id, fs.model_id, fs.sentiment_key, fs.sentiment_value, fs.sentiment_compound,
-                s.id, s.name, s.web
-            FROM feeds f
-            JOIN feed_sentiments fs ON fs.feed_id = f.id AND fs.model_id = 1
-            JOIN sources s ON f.source_id = s.id
-            WHERE f.published BETWEEN $1 AND $2
-            %s
-            ORDER BY f.published DESC
-            LIMIT $3 OFFSET $4
-        `
+        SELECT
+            f.id, f.title, f.link, f.source_id, f.words, f.published,
+            fs.id, fs.sentiment_key, fs.sentiment_value, fs.sentiment_compound,
+            s.id, s.name
+        FROM feeds f
+        JOIN feed_sentiments fs ON fs.feed_id = f.id AND fs.model_id = 1
+        JOIN sources s ON f.source_id = s.id
+        WHERE f.published BETWEEN $1 AND $2
+        %s
+        ORDER BY f.published DESC
+        LIMIT $%d OFFSET $%d
+    `
 
 	// FeedsCountQuery: same filters, just COUNT(*).
 	FeedsCountQuery = `

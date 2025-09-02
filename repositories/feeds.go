@@ -25,6 +25,7 @@ func GetFeeds(
 
 	args := []any{startDate, endDate}
 	idx := 3 // because $1=start, $2=end
+
 	if len(sources) > 0 {
 		conds = append(conds, fmt.Sprintf("AND f.source_id = ANY($%d)", idx))
 		args = append(args, pq.Array(sources))
@@ -48,12 +49,19 @@ func GetFeeds(
 		return resp, fmt.Errorf("GetFeeds: count query error: %w", err)
 	}
 
+	if resp.Total == 0 {
+		return resp, nil
+	}
+
 	// --- Data query ---
-	offset := (page - 1) * perPage
-	argsWithLimit := append(args, perPage, offset)
-	dataSQL := fmt.Sprintf(queries.FeedsBaseQuery, whereClause)
+	offset := int64((page - 1) * perPage)
+	limit := int64(perPage)
+
+	argsWithLimit := append(args, limit, offset)
+	dataSQL := fmt.Sprintf(queries.FeedsBaseQuery, whereClause, idx, idx+1)
 
 	rows, err := db.DB.QueryContext(ctx, dataSQL, argsWithLimit...)
+
 	if err != nil {
 		return resp, fmt.Errorf("GetFeeds: data query error: %w", err)
 	}
