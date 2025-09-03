@@ -30,7 +30,7 @@ func main() {
 	// Register your routes
 	routes.SetupRoutes(router, cfg)
 
-	if err := router.Run(":1985"); err != nil {
+	if err := router.Run(":" + cfg.APP_PORT); err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 	}
 }

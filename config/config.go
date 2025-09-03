@@ -21,6 +21,7 @@ type Config struct {
 	IMDBApiHost        string
 	IMDBApiKey         string
 	CORSAllowedOrigins string
+	APP_PORT           string
 }
 
 // LoadConfig loads environment variables from .env
@@ -28,6 +29,11 @@ func LoadConfig() Config {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
+	}
+
+	appPort := os.Getenv("APP_PORT")
+	if appPort == "" {
+		appPort = "1985" // default
 	}
 
 	var issuers, emails []string
@@ -52,5 +58,6 @@ func LoadConfig() Config {
 		USGSApiHost:        os.Getenv("USGS_API_HOST"),
 		IMDBApiHost:        os.Getenv("IMDB_BASE_URL"),
 		IMDBApiKey:         os.Getenv("IMDB_API_KEY"),
+		APP_PORT:           appPort,
 	}
 }
