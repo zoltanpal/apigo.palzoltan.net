@@ -307,7 +307,8 @@ func WordCoOccurrences(c *gin.Context) {
 		srcIDs,
 	)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to compute co-occurrences"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to compute co-occurrences",
+			"details": err.Error()})
 		return
 	}
 

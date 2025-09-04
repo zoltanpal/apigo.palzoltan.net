@@ -271,20 +271,22 @@ func WordCoOccurrences(
 	}
 
 	args := []any{
-		word,                    // $1
-		startDate + " 00:00:00", // $2
-		endDate + " 23:59:59",   // $3
+		word,                          // $1
+		startDate + " 00:00:00",       // $2
+		endDate + " 23:59:59",         // $3
+		pq.Array(utils.StopWordsList), // $4
 	}
+
 	extra := ""
 	if len(sources) > 0 {
-		extra = " AND f.source_id = ANY($4)"
+		extra = " AND f.source_id = ANY($5)"
 		args = append(args, pq.Array(sources))
 	}
-	println("extra:", extra)
 
 	sql := fmt.Sprintf(queries.WordCoOccurrences, extra)
 
 	rows, err := db.DB.QueryContext(ctx, sql, args...)
+
 	if err != nil {
 		return nil, fmt.Errorf("WordCoOccurrences: query error: %w", err)
 	}

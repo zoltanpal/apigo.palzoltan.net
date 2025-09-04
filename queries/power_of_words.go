@@ -130,7 +130,7 @@ const (
             SELECT ta.id AS feed_id, w AS co_word
             FROM target_articles ta,
                 unnest(ta.words) AS w
-            WHERE w <> $1
+            WHERE w <> $1 AND NOT (w = ANY($4))
         ),
         sentiments AS (
             SELECT feed_id,
