@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"golang-restapi/config"
 	"golang-restapi/repositories"
 	"golang-restapi/utils"
 
@@ -313,4 +314,12 @@ func WordCoOccurrences(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, rows)
+}
+
+func RssReader(c *gin.Context) {
+	lang := c.DefaultQuery("lang", "hun")
+
+	feeds := repositories.RssReader(c.Request.Context(), config.LoadConfig(), lang)
+
+	c.JSON(http.StatusOK, feeds)
 }

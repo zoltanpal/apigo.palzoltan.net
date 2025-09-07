@@ -35,6 +35,8 @@ type FeedSentiment struct {
 type Source struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
+	Rss  string `json:"rss"`
+	Lang string `json:"lang"`
 }
 
 // SentimentGroupRow

@@ -2,10 +2,11 @@ package config
 
 import (
 	//"fmt"
-	"github.com/joho/godotenv"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/joho/godotenv"
 )
 
 // Config holds application configuration
@@ -22,6 +23,8 @@ type Config struct {
 	IMDBApiKey         string
 	CORSAllowedOrigins string
 	APP_PORT           string
+	SentimentURL       string
+	SentimentToken     string
 }
 
 // LoadConfig loads environment variables from .env
@@ -58,6 +61,8 @@ func LoadConfig() Config {
 		USGSApiHost:        os.Getenv("USGS_API_HOST"),
 		IMDBApiHost:        os.Getenv("IMDB_BASE_URL"),
 		IMDBApiKey:         os.Getenv("IMDB_API_KEY"),
+		SentimentURL:       os.Getenv("SENTIMENT_URL"),
+		SentimentToken:     os.Getenv("SENTIMENT_TOKEN"),
 		APP_PORT:           appPort,
 	}
 }

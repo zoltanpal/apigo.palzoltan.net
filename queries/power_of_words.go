@@ -154,4 +154,10 @@ const (
         ORDER BY co_occurrence DESC
         LIMIT 30;
     `
+
+	SourcesByLanguage = `
+        SELECT id, rss, lang
+        FROM sources
+        WHERE lang = $1
+    `
 )
