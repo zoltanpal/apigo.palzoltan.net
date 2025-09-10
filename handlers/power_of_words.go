@@ -314,3 +314,35 @@ func WordCoOccurrences(c *gin.Context) {
 
 	c.JSON(http.StatusOK, rows)
 }
+
+// GET /phrase_frequency_trends?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD
+func PhraseFrequencyTrends(c *gin.Context) {
+	start := c.Query("start_date")
+	end := c.Query("end_date")
+	if start == "" || end == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "start_date and end_date are required (YYYY-MM-DD)"})
+		return
+	}
+
+	if _, err := time.Parse(feedDateLayout, start); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid start_date format"})
+		return
+	}
+	if _, err := time.Parse(feedDateLayout, end); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid end_date format"})
+		return
+	}
+
+	rows, err := repositories.PhraseFrequencyTrends(
+		c.Request.Context(),
+		start, end,
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to compute phrase frequency trends",
+			"details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, rows)
+
+}

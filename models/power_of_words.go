@@ -98,3 +98,12 @@ type FeedResponse struct {
 	Page  int               `json:"page"`
 	Feeds []FeedWithDetails `json:"feeds"`
 }
+
+type PhraseFrequencyRow struct {
+	Source    string `json:"source"`
+	Year      int    `json:"year"`
+	Phrase    string `json:"phrase"`
+	Month     string `json:"date_ts"`
+	Frequency int    `json:"freq"`
+	Ranked    int    `json:"rnk"`
+}

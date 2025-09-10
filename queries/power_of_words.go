@@ -154,4 +154,36 @@ const (
         ORDER BY co_occurrence DESC
         LIMIT 30;
     `
+
+	PhraseFrequencyTrends = `
+        WITH bigrams AS (
+        SELECT
+            s.name AS source,
+            extract(year  FROM f.feed_date)::int AS year,
+            extract(month FROM f.feed_date)::int AS date_ts,
+            lower(f.words[i]) || ' ' || lower(f.words[i+1]) AS phrase
+        FROM feeds f
+        JOIN sources s ON f.source_id = s.id
+        CROSS JOIN LATERAL generate_subscripts(f.words, 1) AS i
+        WHERE f.feed_date BETWEEN $1 AND $2
+            AND i < array_length(f.words,1)
+            AND (lower(f.words[i]) || ' ' || lower(f.words[i+1])) = ANY($3::text[])
+        ),
+        counts AS (
+        SELECT source, year, date_ts, phrase, COUNT(*)::int AS freq
+        FROM bigrams
+        GROUP BY 1,2,3,4
+        -- HAVING COUNT(*) >= 5
+        ),
+        ranked AS (
+        SELECT
+            source, year, date_ts, phrase, freq,
+            RANK() OVER (PARTITION BY source, year, date_ts ORDER BY freq DESC, phrase) AS rnk
+        FROM counts
+        )
+        SELECT *
+        FROM ranked
+        WHERE rnk <= 5
+        ORDER BY year, date_ts, source, rnk
+    `
 )

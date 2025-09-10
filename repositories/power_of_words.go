@@ -311,3 +311,45 @@ func WordCoOccurrences(
 	}
 	return out, nil
 }
+
+func PhraseFrequencyTrends(
+	ctx context.Context,
+	startDate, endDate string,
+) ([]models.PhraseFrequencyRow, error) {
+	args := []any{
+		startDate + " 00:00:00",          // $1
+		endDate + " 23:59:59",            // $2
+		pq.Array(utils.StopPhrasessList), // $3
+	}
+
+	sql := fmt.Sprintf(queries.PhraseFrequencyTrends)
+	rows, err := db.DB.QueryContext(ctx, sql, args...)
+
+	if err != nil {
+		return nil, fmt.Errorf("PhraseFrequencyTrends: query error: %w", err)
+	}
+	defer rows.Close()
+
+	out := make([]models.PhraseFrequencyRow, 0, 64)
+	for rows.Next() {
+		var r models.PhraseFrequencyRow
+		if err := rows.Scan(
+			&r.Source,
+			&r.Year,
+			&r.Month,
+			&r.Phrase,
+			&r.Frequency,
+			&r.Ranked,
+		); err != nil {
+			return nil, fmt.Errorf("PhraseFrequencyTrends: scan error: %w", err)
+		}
+		out = append(out, r)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("PhraseFrequencyTrends: rows iteration error: %w", err)
+	}
+
+	return out, nil
+
+}
