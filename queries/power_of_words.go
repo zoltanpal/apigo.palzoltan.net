@@ -167,7 +167,7 @@ const (
         CROSS JOIN LATERAL generate_subscripts(f.words, 1) AS i
         WHERE f.feed_date BETWEEN $1 AND $2
             AND i < array_length(f.words,1)
-            AND (lower(f.words[i]) || ' ' || lower(f.words[i+1])) = ANY($3::text[])
+            AND (lower(f.words[i]) || ' ' || lower(f.words[i+1])) <> ALL($3)
         ),
         counts AS (
         SELECT source, year, date_ts, phrase, COUNT(*)::int AS freq
