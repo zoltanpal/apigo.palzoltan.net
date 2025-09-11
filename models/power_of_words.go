@@ -101,9 +101,9 @@ type FeedResponse struct {
 
 type PhraseFrequencyRow struct {
 	Source    string `json:"source"`
-	Year      int    `json:"year"`
 	Phrase    string `json:"phrase"`
-	Month     string `json:"date_ts"`
+	Year      int    `json:"year"`
+	DateGroup int    `json:"date_group"`
 	Frequency int    `json:"freq"`
 	Ranked    int    `json:"rnk"`
 }

@@ -314,12 +314,13 @@ func WordCoOccurrences(
 
 func PhraseFrequencyTrends(
 	ctx context.Context,
-	startDate, endDate string,
+	startDate, endDate, dateGroup string,
 ) ([]models.PhraseFrequencyRow, error) {
 	args := []any{
 		startDate + " 00:00:00",          // $1
 		endDate + " 23:59:59",            // $2
 		pq.Array(utils.StopPhrasessList), // $3
+		dateGroup,                        // $4
 	}
 
 	sql := fmt.Sprintf(queries.PhraseFrequencyTrends)
@@ -335,9 +336,9 @@ func PhraseFrequencyTrends(
 		var r models.PhraseFrequencyRow
 		if err := rows.Scan(
 			&r.Source,
-			&r.Year,
-			&r.Month,
 			&r.Phrase,
+			&r.Year,
+			&r.DateGroup,
 			&r.Frequency,
 			&r.Ranked,
 		); err != nil {

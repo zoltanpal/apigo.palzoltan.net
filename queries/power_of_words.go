@@ -159,9 +159,12 @@ const (
         WITH bigrams AS (
         SELECT
             s.name AS source,
-            extract(year  FROM f.feed_date)::int AS year,
-            extract(month FROM f.feed_date)::int AS date_ts,
-            lower(f.words[i]) || ' ' || lower(f.words[i+1]) AS phrase
+            lower(f.words[i]) || ' ' || lower(f.words[i+1]) AS phrase,
+            CASE
+                WHEN $4 = 'week'  THEN extract(isoyear FROM f.feed_date)::int
+                WHEN $4 = 'month' THEN extract(year    FROM f.feed_date)::int
+            END AS year,
+            date_part($4, f.feed_date)::int AS date_group
         FROM feeds f
         JOIN sources s ON f.source_id = s.id
         CROSS JOIN LATERAL generate_subscripts(f.words, 1) AS i
@@ -170,20 +173,20 @@ const (
             AND (lower(f.words[i]) || ' ' || lower(f.words[i+1])) <> ALL($3)
         ),
         counts AS (
-        SELECT source, year, date_ts, phrase, COUNT(*)::int AS freq
+        SELECT source, year, date_group, phrase, COUNT(*)::int AS freq
         FROM bigrams
         GROUP BY 1,2,3,4
         -- HAVING COUNT(*) >= 5
         ),
         ranked AS (
         SELECT
-            source, year, date_ts, phrase, freq,
-            RANK() OVER (PARTITION BY source, year, date_ts ORDER BY freq DESC, phrase) AS rnk
+            source, phrase, year, date_group, freq,
+            RANK() OVER (PARTITION BY source, year, date_group ORDER BY freq DESC, phrase) AS rnk
         FROM counts
         )
         SELECT *
         FROM ranked
         WHERE rnk <= 5
-        ORDER BY year, date_ts, source, rnk
+        ORDER BY year, date_group, source, rnk
     `
 )

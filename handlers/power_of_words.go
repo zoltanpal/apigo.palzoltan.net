@@ -319,6 +319,8 @@ func WordCoOccurrences(c *gin.Context) {
 func PhraseFrequencyTrends(c *gin.Context) {
 	start := c.Query("start_date")
 	end := c.Query("end_date")
+	dateGroup := strings.ToLower(c.DefaultQuery("date_group", "month"))
+
 	if start == "" || end == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "start_date and end_date are required (YYYY-MM-DD)"})
 		return
@@ -335,7 +337,7 @@ func PhraseFrequencyTrends(c *gin.Context) {
 
 	rows, err := repositories.PhraseFrequencyTrends(
 		c.Request.Context(),
-		start, end,
+		start, end, dateGroup,
 	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to compute phrase frequency trends",
