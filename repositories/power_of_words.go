@@ -18,6 +18,7 @@ import (
 
 // MostCommonWords fetches feed words, filters stopwords, and counts occurrences.
 func MostCommonWords(ctx context.Context, startDate, endDate string, n int) ([]models.WordCount, error) {
+
 	rows, err := db.DB.QueryContext(ctx, queries.GetWordsByDateRange, startDate, endDate)
 	if err != nil {
 		return nil, fmt.Errorf("MostCommonWords: query error: %w", err)

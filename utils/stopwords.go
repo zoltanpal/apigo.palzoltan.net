@@ -49,7 +49,7 @@ var stopwords = map[string]struct{}{
 	"egyetlen": {}, "egyik": {}, "egyre": {}, "ekkor": {}, "el": {}, "elég": {}, "ellen": {},
 	"elő": {}, "először": {}, "előtt": {}, "első": {}, "én": {}, "éppen": {}, "ebben": {},
 	"ehhez": {}, "emilyen": {}, "ennek": {}, "erre": {}, "ez": {}, "ezt": {}, "ezek": {},
-	"ezen": {}, "ezzel": {}, "ezért": {}, "ezúttal": {}, "fel": {}, "felé": {}, "hanem": {},
+	"ezen": {}, "ezzel": {}, "ezért": {}, "ezúttal": {}, "és": {}, "fel": {}, "felé": {}, "hanem": {},
 	"hiszen": {}, "hogy": {}, "hogyan": {}, "ide": {}, "igen": {}, "így": {}, "illetve": {},
 	"ill": {}, "ilyen": {}, "ilyenkor": {}, "is": {}, "ismét": {}, "itt": {}, "jó": {}, "jól": {},
 	"jobban": {}, "kell": {}, "kellett": {}, "keresztül": {}, "keressünk": {}, "ki": {}, "kívül": {},
@@ -66,7 +66,7 @@ var stopwords = map[string]struct{}{
 	"talán": {}, "tehát": {}, "teljes": {}, "tovább": {}, "továbbá": {}, "több": {}, "túl": {},
 	"úgy": {}, "új": {}, "újabb": {}, "újra": {}, "után": {}, "utána": {}, "utolsó": {}, "vagy": {},
 	"vagyis": {}, "valaki": {}, "valami": {}, "valamint": {}, "való": {}, "van": {}, "vannak": {},
-	"vele": {}, "vissza": {}, "volna": {}, "volt": {}, "voltak": {}, "voltunk": {},
+	"vele": {}, "vissza": {}, "volna": {}, "volt": {}, "voltak": {}, "voltunk": {}, "magyar": {}, "videó": {},
 }
 
 // IsStopword returns true if word is in STOPWORDS list
