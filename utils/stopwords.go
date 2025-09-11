@@ -49,7 +49,7 @@ var stopwords = map[string]struct{}{
 	"egyetlen": {}, "egyik": {}, "egyre": {}, "ekkor": {}, "el": {}, "elég": {}, "ellen": {},
 	"elő": {}, "először": {}, "előtt": {}, "első": {}, "én": {}, "éppen": {}, "ebben": {},
 	"ehhez": {}, "emilyen": {}, "ennek": {}, "erre": {}, "ez": {}, "ezt": {}, "ezek": {},
-	"ezen": {}, "ezzel": {}, "ezért": {}, "ezúttal": {}, "fel": {}, "felé": {}, "hanem": {},
+	"ezen": {}, "ezzel": {}, "ezért": {}, "ezúttal": {}, "és": {}, "fel": {}, "felé": {}, "hanem": {},
 	"hiszen": {}, "hogy": {}, "hogyan": {}, "ide": {}, "igen": {}, "így": {}, "illetve": {},
 	"ill": {}, "ilyen": {}, "ilyenkor": {}, "is": {}, "ismét": {}, "itt": {}, "jó": {}, "jól": {},
 	"jobban": {}, "kell": {}, "kellett": {}, "keresztül": {}, "keressünk": {}, "ki": {}, "kívül": {},
