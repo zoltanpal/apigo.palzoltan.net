@@ -176,7 +176,7 @@ const (
         SELECT source, year, date_group, phrase, COUNT(*)::int AS freq
         FROM bigrams
         GROUP BY 1,2,3,4
-        HAVING COUNT(*) >= 5
+        HAVING COUNT(*) >= 3
         ),
         ranked AS (
         SELECT
