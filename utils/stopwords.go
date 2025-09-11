@@ -66,7 +66,7 @@ var stopwords = map[string]struct{}{
 	"talán": {}, "tehát": {}, "teljes": {}, "tovább": {}, "továbbá": {}, "több": {}, "túl": {},
 	"úgy": {}, "új": {}, "újabb": {}, "újra": {}, "után": {}, "utána": {}, "utolsó": {}, "vagy": {},
 	"vagyis": {}, "valaki": {}, "valami": {}, "valamint": {}, "való": {}, "van": {}, "vannak": {},
-	"vele": {}, "vissza": {}, "volna": {}, "volt": {}, "voltak": {}, "voltunk": {},
+	"vele": {}, "vissza": {}, "volna": {}, "volt": {}, "voltak": {}, "voltunk": {}, "magyar": {}, "videó": {},
 }
 
 // IsStopword returns true if word is in STOPWORDS list
