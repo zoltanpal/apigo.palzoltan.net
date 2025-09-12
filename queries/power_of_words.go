@@ -170,13 +170,13 @@ const (
         CROSS JOIN LATERAL generate_subscripts(f.words, 1) AS i
         WHERE f.feed_date BETWEEN $1 AND $2
             AND i < array_length(f.words,1)
-            AND (lower(f.words[i]) || ' ' || lower(f.words[i+1])) <> ALL($3)
+            AND (lower(f.words[i]) || ' ' || lower(f.words[i+1])) <> ALL($3) %s
         ),
         counts AS (
-        SELECT source, year, date_group, phrase, COUNT(*)::int AS freq
-        FROM bigrams
-        GROUP BY 1,2,3,4
-        HAVING COUNT(*) >= 3
+            SELECT source, year, date_group, phrase, COUNT(*)::int AS freq
+            FROM bigrams
+            GROUP BY 1,2,3,4
+            HAVING COUNT(*) >= 3
         ),
         ranked AS (
         SELECT

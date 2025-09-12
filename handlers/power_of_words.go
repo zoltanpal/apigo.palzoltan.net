@@ -335,9 +335,15 @@ func PhraseFrequencyTrends(c *gin.Context) {
 		return
 	}
 
+	// sources
+	srcIDs := []int{}
+	srcIDs = utils.ParseIntList(c.Query("sources"))
+
 	rows, err := repositories.PhraseFrequencyTrends(
 		c.Request.Context(),
-		start, end, dateGroup,
+		start, end,
+		dateGroup,
+		srcIDs,
 	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to compute phrase frequency trends",
