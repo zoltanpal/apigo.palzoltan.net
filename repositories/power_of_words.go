@@ -14,6 +14,8 @@ import (
 	"golang-restapi/utils"
 
 	"github.com/lib/pq"
+
+	"golang-restapi/sentimentpb"
 )
 
 // MostCommonWords fetches feed words, filters stopwords, and counts occurrences.
@@ -311,4 +313,52 @@ func WordCoOccurrences(
 		return nil, fmt.Errorf("WordCoOccurrences: rows iteration error: %w", err)
 	}
 	return out, nil
+}
+
+func GetGnewsFeeds(ctx context.Context, word string, lang string) ([]models.GNewsResponse, error) {
+
+	if word == "" {
+		return nil, fmt.Errorf("word is required")
+	}
+
+	period := "7d"
+	country := "hu"
+
+	feeds, err := utils.GetGoogleNews(word, period, lang, country)
+	if err != nil {
+		return nil, fmt.Errorf("GetGnewsFeeds error: %w", err)
+	}
+
+	feedItems := make([]*sentimentpb.AnalyzeRequest, 0, len(feeds))
+	for _, feed := range feeds {
+		feedItems = append(feedItems, &sentimentpb.AnalyzeRequest{
+			Text:     feed.Title,
+			Language: lang,
+		})
+	}
+
+	batch := &sentimentpb.BatchAnalyzeRequest{
+		Items: feedItems,
+	}
+
+	resp, err := utils.SentimentClient.BatchAnalyze(ctx, batch)
+	if err != nil {
+		return nil, fmt.Errorf("BatchAnalyze error: %w", err)
+	}
+
+	// Map results back to feeds
+	results := make([]models.GNewsResponse, 0, len(resp.GetResults()))
+	for i, result := range resp.GetResults() {
+		res := models.GNewsResponse{
+			Title:          feeds[i].Title,
+			Source:         feeds[i].Source,
+			Published:      feeds[i].Published,
+			SentimentKey:   result.GetSentimentKey(),
+			SentimentValue: float32(result.GetSentimentValue()),
+		}
+		results = append(results, res)
+	}
+
+	return results, nil
+
 }

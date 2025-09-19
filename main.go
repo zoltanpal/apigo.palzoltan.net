@@ -8,6 +8,7 @@ import (
 	"golang-restapi/db"
 	"golang-restapi/middlewares"
 	"golang-restapi/routes"
+	"golang-restapi/utils"
 )
 
 func main() {
@@ -18,6 +19,10 @@ func main() {
 	// Init DB
 	db.InitDB(cfg)
 	defer db.DB.Close()
+
+	// init gRPC client
+	utils.InitSentimentClient()
+	defer utils.CloseSentimentClient()
 
 	// router init
 	router := gin.New()
