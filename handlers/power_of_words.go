@@ -317,7 +317,7 @@ func WordCoOccurrences(c *gin.Context) {
 
 func LiveSentimentAnalysis(c *gin.Context) {
 	word := c.Query("word")
-	lang := c.DefaultQuery("lang", "hun") // default to Hungarian (ISO-2)
+	lang := c.DefaultQuery("lang", "hun")
 
 	if word == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
