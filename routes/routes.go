@@ -22,7 +22,7 @@ func SetupRoutes(r *gin.Engine, cfg config.Config) {
 			"http://127.0.0.1:3000",
 			"https://palzoltan.net",
 			"https://pow.palzoltan.net",
-			"http://devpow.palzoltan.net",
+			"https://devpow.palzoltan.net",
 		},
 		AllowMethods:     []string{"GET"}, // "PUT", "DELETE", "PATCH", "POST",  "OPTIONS"
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
