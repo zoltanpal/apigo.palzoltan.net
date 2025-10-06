@@ -314,3 +314,30 @@ func WordCoOccurrences(c *gin.Context) {
 
 	c.JSON(http.StatusOK, rows)
 }
+
+func LiveSentimentAnalysis(c *gin.Context) {
+	word := c.Query("word")
+	lang := c.DefaultQuery("lang", "hun")
+
+	if word == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "word parameter is required",
+		})
+		return
+	}
+
+	rows, err := repositories.GetGnewsFeeds(
+		c.Request.Context(),
+		word,
+		lang,
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "failed to fetch and analyze news",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, rows)
+}

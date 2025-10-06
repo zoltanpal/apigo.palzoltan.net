@@ -22,7 +22,7 @@ func SetupRoutes(r *gin.Engine, cfg config.Config) {
 			"http://127.0.0.1:3000",
 			"https://palzoltan.net",
 			"https://pow.palzoltan.net",
-			"http://devpow.palzoltan.net",
+			"https://devpow.palzoltan.net",
 		},
 		AllowMethods:     []string{"GET"}, // "PUT", "DELETE", "PATCH", "POST",  "OPTIONS"
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
@@ -42,4 +42,6 @@ func SetupRoutes(r *gin.Engine, cfg config.Config) {
 	protected.GET("/pow/bias_detection", handlers.BiasDetection)
 	protected.GET("/pow/correlation_between_sources_avg_compound", handlers.CorrelationBetweenSourcesAvgCompound)
 	protected.GET("/pow/word_co_occurences", handlers.WordCoOccurrences)
+
+	protected.GET("/sentiments/news_search", handlers.LiveSentimentAnalysis)
 }
