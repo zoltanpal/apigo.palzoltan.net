@@ -331,6 +331,9 @@ func PhraseFrequencyTrends(
 		args = append(args, pq.Array(sources))
 	}
 
+	excludeNames := "orbán viktor, magyar péter"
+	args = append(args, pq.Array(strings.Split(excludeNames, ", "))) // $5
+
 	sql := fmt.Sprintf(queries.PhraseFrequencyTrends, extra)
 	rows, err := db.DB.QueryContext(ctx, sql, args...)
 

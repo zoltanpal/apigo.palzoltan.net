@@ -155,6 +155,9 @@ const (
         LIMIT 30;
     `
 
+	phraseExclusion = `
+        AND NOT ()
+    `
 	PhraseFrequencyTrends = `
         WITH bigrams AS (
         SELECT
@@ -186,7 +189,7 @@ const (
         )
         SELECT *
         FROM ranked
-        WHERE rnk <= 5
+        WHERE rnk <= 5 AND phrase <> ALL($5)
         ORDER BY year, date_group, source, rnk
     `
 )
