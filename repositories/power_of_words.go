@@ -322,19 +322,22 @@ func PhraseFrequencyTrends(
 		startDate + " 00:00:00",          // $1
 		endDate + " 23:59:59",            // $2
 		pq.Array(utils.StopPhrasessList), // $3
-		dateGroup,                        // $4
+		dateGroup,                        // $4  ("week" or "month")
+		pq.Array(utils.StopwordsSimple),  // $5
 	}
 
-	extra := ""
-	if len(sources) > 0 {
-		extra = " AND f.source_id = ANY($5)"
-		args = append(args, pq.Array(sources))
-	}
+	/*
+		extra := ""
+		if len(sources) > 0 {
+			extra = " AND f.source_id = ANY($6)"
+			args = append(args, pq.Array(sources))
+		}
+	*/
 
 	// excludeNames := "orbán viktor, magyar péter"
 	// args = append(args, pq.Array(strings.Split(excludeNames, ", "))) // $5
 
-	sql := fmt.Sprintf(queries.PhraseFrequencyTrends, extra)
+	sql := fmt.Sprintf(queries.PhraseFrequencyTrends)
 	rows, err := db.DB.QueryContext(ctx, sql, args...)
 
 	if err != nil {
