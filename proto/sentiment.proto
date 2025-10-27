@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package sentiment;
+option go_package = "grpc_sentiment_client/sentimentpb;sentimentpb";
+
+message AnalyzeRequest {
+  string text = 1;
+  // Use your analyzer codes: "hun", "dan", "eng"
+  string language = 2;
+}
+
+message SentimentScore {
+  string label = 1;   // e.g., "positive" | "negative" | "neutral" | "compound"
+  double score = 2;   // 0..1 (or any numeric value from your analyzer)
+}
+
+message AnalyzeResponse {
+  string title = 1;                // original text
+  string sentiment_key = 2;        // dominant label
+  double sentiment_value = 3;      // dominant score
+  map<string, double> sentiments = 4; // all sentiment scores
+}
+
+message BatchAnalyzeRequest {
+  repeated AnalyzeRequest items = 1;
+}
+
+message BatchAnalyzeResponse {
+  repeated AnalyzeResponse results = 1;
+}
+
+service SentimentService {
+  rpc Analyze(AnalyzeRequest) returns (AnalyzeResponse);
+  rpc BatchAnalyze(BatchAnalyzeRequest) returns (BatchAnalyzeResponse);
+}
