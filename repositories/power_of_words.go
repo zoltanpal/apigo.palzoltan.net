@@ -317,23 +317,21 @@ func PhraseFrequencyTrends(
 	ctx context.Context,
 	startDate, endDate, dateGroup string,
 	sources []int, // optional
+	names_excluded string, // optional
 ) ([]models.PhraseFrequencyRow, error) {
 	args := []any{
 		startDate + " 00:00:00",          // $1
 		endDate + " 23:59:59",            // $2
-		pq.Array(utils.StopPhrasessList), // $3
-		dateGroup,                        // $4  ("week" or "month")
-		pq.Array(utils.StopwordsSimple),  // $5
+		dateGroup,                        // $3  ("week" or "month")
+		pq.Array(utils.StopwordsSimple),  // $4
+		pq.Array(utils.StopPhrasessList), // $5
 	}
 
 	extra := ""
 	if len(sources) > 0 {
-		extra = " AND f.source_id = ANY($6)"
-		args = append(args, pq.Array(sources))
+		extra = " AND f.source_id = ANY($6::int[])"
+		args = append(args, pq.Array(sources)) // $6
 	}
-
-	// excludeNames := "orbán viktor, magyar péter"
-	// args = append(args, pq.Array(strings.Split(excludeNames, ", "))) // $5
 
 	sql := fmt.Sprintf(queries.PhraseFrequencyTrends, extra)
 	rows, err := db.DB.QueryContext(ctx, sql, args...)

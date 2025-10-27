@@ -164,10 +164,10 @@ const (
                 s.name AS source,
                 lower(f.words_masked[i]) || ' ' || lower(f.words_masked[i+1]) AS phrase,
                 CASE
-                    WHEN $4 = 'week'  THEN extract(isoyear FROM f.feed_date)::int
-                    WHEN $4 = 'month' THEN extract(year FROM f.feed_date)::int
+                    WHEN $3 = 'week'  THEN extract(isoyear FROM f.feed_date)::int
+                    WHEN $3 = 'month' THEN extract(year FROM f.feed_date)::int
                 END AS year,
-                date_part($4, f.feed_date)::int AS date_group
+                date_part($3, f.feed_date)::int AS date_group
             FROM feeds f
             JOIN sources s ON f.source_id = s.id
             CROSS JOIN LATERAL generate_subscripts(f.words_masked, 1) AS i
@@ -175,10 +175,9 @@ const (
             AND f.words_masked IS NOT NULL
             AND i < array_length(f.words_masked, 1)
             -- exclude if either word is a stopword
-            AND lower(f.words_masked[i]) <> ALL($5)
-            AND lower(f.words_masked[i+1]) <> ALL($5)
-            -- exclude if the phrase itself is in stop phrases list
-            AND (lower(f.words_masked[i]) || ' ' || lower(f.words_masked[i+1])) <> ALL($3) 
+            AND lower(f.words_masked[i]) <> ALL($4)
+            AND lower(f.words_masked[i+1]) <> ALL($4) 
+            AND (lower(f.words_masked[i]) || ' ' || lower(f.words_masked[i+1])) <> ALL($5::text[])
             %s
         ),
         counts AS (
