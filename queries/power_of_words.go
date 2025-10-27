@@ -176,7 +176,7 @@ const (
             AND i < array_length(f.words_masked, 1)
             -- exclude if either word is a stopword
             AND lower(f.words_masked[i]) <> ALL($4)
-            AND lower(f.words_masked[i+1]) <> ALL($4) 
+            AND lower(f.words_masked[i+1]) <> ALL($4)
             AND (lower(f.words_masked[i]) || ' ' || lower(f.words_masked[i+1])) <> ALL($5::text[])
             %s
         ),
@@ -208,6 +208,62 @@ const (
         FROM ranked
         WHERE rnk <= 5
         ORDER BY year, date_group, source, rnk
+       `
 
+	PhraseFrequencyTrendsNew = `
+        WITH base AS (
+        SELECT
+            s.name AS source,
+            f.source_id,
+            f.feed_date,
+            CASE WHEN $5::boolean THEN f.words_masked ELSE f.words END AS arr
+        FROM feeds f
+        JOIN sources s ON f.source_id = s.id
+        WHERE f.feed_date BETWEEN $1 AND $2
+        AND CASE WHEN $5::boolean THEN f.words_masked IS NOT NULL ELSE f.words IS NOT NULL END
+        AND (COALESCE(array_length($7::int[], 1), 0) = 0 OR f.source_id = ANY($7::int[]))
+        ),
+        bigrams AS (
+            SELECT
+                b.source,
+                lower(b.arr[i]) || ' ' || lower(b.arr[i+1]) AS phrase,
+                CASE
+                    WHEN $3 = 'week'  THEN extract(isoyear FROM b.feed_date)::int
+                    WHEN $3 = 'month' THEN extract(year    FROM b.feed_date)::int
+                END AS year,
+                date_part($3, b.feed_date)::int AS date_group
+            FROM base b
+            CROSS JOIN LATERAL generate_subscripts(b.arr, 1) AS i
+            WHERE i < array_length(b.arr, 1)
+            -- token stopwords
+            AND lower(b.arr[i])     <> ALL($4::text[])
+            AND lower(b.arr[i + 1]) <> ALL($4::text[])
+            -- bigram exclusion only when names_excluded = true
+            AND (
+                NOT $5::boolean
+                OR (lower(b.arr[i]) || ' ' || lower(b.arr[i + 1])) <> ALL(COALESCE($6::text[], ARRAY[]::text[]))
+            )
+        ),
+        counts AS (
+            SELECT
+                source, year, date_group, phrase,
+                COUNT(*)::int AS freq
+            FROM bigrams
+            GROUP BY 1,2,3,4
+            HAVING COUNT(*) >= 3
+        ),
+        ranked AS (
+            SELECT
+                source, phrase, year, date_group, freq,
+                RANK() OVER (
+                    PARTITION BY source, year, date_group
+                    ORDER BY freq DESC, phrase
+                ) AS rnk
+            FROM counts
+        )
+        SELECT *
+        FROM ranked
+        WHERE rnk <= 5
+        ORDER BY year, date_group, source, rnk;
     `
 )

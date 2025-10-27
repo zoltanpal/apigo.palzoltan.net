@@ -317,25 +317,22 @@ func PhraseFrequencyTrends(
 	ctx context.Context,
 	startDate, endDate, dateGroup string,
 	sources []int, // optional
-	names_excluded string, // optional
+	namesExcluded bool, // use bool instead of string
 ) ([]models.PhraseFrequencyRow, error) {
+
+	// Ensure you always pass arrays (empty is fine).
+	// Param order maps to $1..$7 in SQL above.
 	args := []any{
 		startDate + " 00:00:00",          // $1
 		endDate + " 23:59:59",            // $2
-		dateGroup,                        // $3  ("week" or "month")
-		pq.Array(utils.StopwordsSimple),  // $4
-		pq.Array(utils.StopPhrasessList), // $5
+		dateGroup,                        // $3 ("week" or "month")
+		pq.Array(utils.StopwordsSimple),  // $4 ::text[]
+		namesExcluded,                    // $5 ::boolean
+		pq.Array(utils.StopPhrasessList), // $6 ::text[] (used only if $5 = true)
+		pq.Array(sources),                // $7 ::int[]   (empty => no filter)
 	}
 
-	extra := ""
-	if len(sources) > 0 {
-		extra = " AND f.source_id = ANY($6::int[])"
-		args = append(args, pq.Array(sources)) // $6
-	}
-
-	sql := fmt.Sprintf(queries.PhraseFrequencyTrends, extra)
-	rows, err := db.DB.QueryContext(ctx, sql, args...)
-
+	rows, err := db.DB.QueryContext(ctx, queries.PhraseFrequencyTrendsNew, args...)
 	if err != nil {
 		return nil, fmt.Errorf("PhraseFrequencyTrends: query error: %w", err)
 	}
