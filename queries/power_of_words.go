@@ -178,7 +178,8 @@ const (
             AND lower(f.words_masked[i]) <> ALL($5)
             AND lower(f.words_masked[i+1]) <> ALL($5)
             -- exclude if the phrase itself is in stop phrases list
-            AND (lower(f.words_masked[i]) || ' ' || lower(f.words_masked[i+1])) <> ALL($3)
+            AND (lower(f.words_masked[i]) || ' ' || lower(f.words_masked[i+1])) <> ALL($3) 
+            %s
         ),
         counts AS (
             SELECT

@@ -4,10 +4,10 @@ import "strings"
 
 var StopwordsSimple = []string{
 	"a", "az", "egy", "be", "ki", "le", "fel", "meg", "el", "át", "rá", "ide", "oda",
-	"év",
+	"év", "i", "es", "is", "ha", "mert", "hogy", "de", "vagy", "és", "tehát",
 	"szét", "össze", "vissza", "de", "hát", "és", "vagy", "hogy", "van", "lesz", "volt",
 	"csak", "nem", "igen", "mint", "én", "te", "õ", "mi", "ti", "õk", "ön", "m1", "m2",
-	"forma 1", "f1", "f2", "2021", "2022", "2023", "2024", "2025", "2026",
+	"1", "f1", "f2", "2021", "2022", "2023", "2024", "2025", "2026",
 }
 
 var StopWordsList = []string{

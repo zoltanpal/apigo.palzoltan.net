@@ -326,18 +326,16 @@ func PhraseFrequencyTrends(
 		pq.Array(utils.StopwordsSimple),  // $5
 	}
 
-	/*
-		extra := ""
-		if len(sources) > 0 {
-			extra = " AND f.source_id = ANY($6)"
-			args = append(args, pq.Array(sources))
-		}
-	*/
+	extra := ""
+	if len(sources) > 0 {
+		extra = " AND f.source_id = ANY($6)"
+		args = append(args, pq.Array(sources))
+	}
 
 	// excludeNames := "orbán viktor, magyar péter"
 	// args = append(args, pq.Array(strings.Split(excludeNames, ", "))) // $5
 
-	sql := fmt.Sprintf(queries.PhraseFrequencyTrends)
+	sql := fmt.Sprintf(queries.PhraseFrequencyTrends, extra)
 	rows, err := db.DB.QueryContext(ctx, sql, args...)
 
 	if err != nil {
