@@ -315,50 +315,51 @@ func WordCoOccurrences(
 	return out, nil
 }
 
-func GetGnewsFeeds(ctx context.Context, word string, lang string) ([]models.GNewsResponse, error) {
+func PhraseFrequencyTrends(
+	ctx context.Context,
+	startDate, endDate, dateGroup string,
+	sources []int, // optional
+	namesExcluded bool, // use bool instead of string
+) ([]models.PhraseFrequencyRow, error) {
 
-	if word == "" {
-		return nil, fmt.Errorf("word is required")
+	// Ensure you always pass arrays (empty is fine).
+	// Param order maps to $1..$7 in SQL above.
+	args := []any{
+		startDate + " 00:00:00",          // $1
+		endDate + " 23:59:59",            // $2
+		dateGroup,                        // $3 ("week" or "month")
+		pq.Array(utils.StopwordsSimple),  // $4 ::text[]
+		namesExcluded,                    // $5 ::boolean
+		pq.Array(utils.StopPhrasessList), // $6 ::text[] (used only if $5 = true)
+		pq.Array(sources),                // $7 ::int[]   (empty => no filter)
 	}
 
-	period := "7d"
-	country := "hu"
-
-	feeds, err := utils.GetGoogleNews(word, period, lang, country)
+	rows, err := db.DB.QueryContext(ctx, queries.PhraseFrequencyTrendsNew, args...)
 	if err != nil {
-		return nil, fmt.Errorf("GetGnewsFeeds error: %w", err)
+		return nil, fmt.Errorf("PhraseFrequencyTrends: query error: %w", err)
 	}
+	defer rows.Close()
 
-	feedItems := make([]*sentimentpb.AnalyzeRequest, 0, len(feeds))
-	for _, feed := range feeds {
-		feedItems = append(feedItems, &sentimentpb.AnalyzeRequest{
-			Text:     feed.Title,
-			Language: lang,
-		})
-	}
-
-	batch := &sentimentpb.BatchAnalyzeRequest{
-		Items: feedItems,
-	}
-
-	resp, err := utils.SentimentClient.BatchAnalyze(ctx, batch)
-	if err != nil {
-		return nil, fmt.Errorf("BatchAnalyze error: %w", err)
-	}
-
-	// Map results back to feeds
-	results := make([]models.GNewsResponse, 0, len(resp.GetResults()))
-	for i, result := range resp.GetResults() {
-		res := models.GNewsResponse{
-			Title:          feeds[i].Title,
-			Source:         feeds[i].Source,
-			Published:      feeds[i].Published,
-			SentimentKey:   result.GetSentimentKey(),
-			SentimentValue: float32(result.GetSentimentValue()),
+	out := make([]models.PhraseFrequencyRow, 0, 64)
+	for rows.Next() {
+		var r models.PhraseFrequencyRow
+		if err := rows.Scan(
+			&r.Source,
+			&r.Phrase,
+			&r.Year,
+			&r.DateGroup,
+			&r.Frequency,
+			&r.Ranked,
+		); err != nil {
+			return nil, fmt.Errorf("PhraseFrequencyTrends: scan error: %w", err)
 		}
-		results = append(results, res)
+		out = append(out, r)
 	}
 
-	return results, nil
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("PhraseFrequencyTrends: rows iteration error: %w", err)
+	}
+
+	return out, nil
 
 }
