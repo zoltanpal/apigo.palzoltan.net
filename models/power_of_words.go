@@ -99,6 +99,20 @@ type FeedResponse struct {
 	Feeds []FeedWithDetails `json:"feeds"`
 }
 
+type GNewsItem struct {
+	Title     string `json:"title"`
+	Published string `json:"published"`
+	Source    string `json:"source"`
+}
+
+type GNewsResponse struct {
+	Title          string  `json:"title"`
+	Source         string  `json:"source"`
+	Published      string  `json:"published"`
+	SentimentKey   string  `json:"sentiment_key"`
+	SentimentValue float32 `json:"sentiment_value"`
+}
+
 type PhraseFrequencyRow struct {
 	Source    string `json:"source"`
 	Phrase    string `json:"phrase"`
