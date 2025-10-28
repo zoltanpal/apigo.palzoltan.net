@@ -14,8 +14,7 @@ import (
 	"golang-restapi/utils"
 
 	"github.com/lib/pq"
-
-	"golang-restapi/sentimentpb"
+	// "golang-restapi/sentimentpb"
 )
 
 // MostCommonWords fetches feed words, filters stopwords, and counts occurrences.
