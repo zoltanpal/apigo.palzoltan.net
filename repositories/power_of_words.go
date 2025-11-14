@@ -314,6 +314,7 @@ func WordCoOccurrences(
 	return out, nil
 }
 
+// PhraseFrequencyTrends fetches phrase frequency trends over time.
 func PhraseFrequencyTrends(
 	ctx context.Context,
 	startDate, endDate, dateGroup string,
@@ -361,4 +362,31 @@ func PhraseFrequencyTrends(
 
 	return out, nil
 
+}
+
+// OverallStatistics fetches overall statistics about the whole database.
+func OverallStatistics(ctx context.Context) (models.Statistics, error) {
+
+	row := db.DB.QueryRowContext(ctx, queries.OverallStatistics)
+
+	var out models.Statistics
+
+	if err := row.Scan(
+		&out.FirstFeedDate,
+		&out.LastFeedDate,
+		&out.TimeSpanDays,
+		&out.TotalFeeds,
+		&out.TotalSources,
+		&out.TotalPositive,
+		&out.TotalNegative,
+		&out.TotalNeutral,
+		&out.PctPositive,
+		&out.PctNegative,
+		&out.PctNeutral,
+		&out.AvgFeedsPerDay,
+		&out.MostActiveSourceName,
+	); err != nil {
+		return models.Statistics{}, fmt.Errorf("OverallStatistics: scan error: %w", err)
+	}
+	return out, nil
 }
