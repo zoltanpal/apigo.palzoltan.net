@@ -121,3 +121,19 @@ type PhraseFrequencyRow struct {
 	Frequency int    `json:"freq"`
 	Ranked    int    `json:"rnk"`
 }
+
+type Statistics struct {
+	FirstFeedDate        string  `json:"first_feed_date"`
+	LastFeedDate         string  `json:"last_feed_date"`
+	TimeSpanDays         int     `json:"time_span_days"`
+	TotalFeeds           int     `json:"total_feeds"`
+	TotalSources         int     `json:"total_sources"`
+	TotalPositive        int     `json:"total_positive"`
+	TotalNegative        int     `json:"total_negative"`
+	TotalNeutral         int     `json:"total_neutral"`
+	PctPositive          float64 `json:"pct_positive"`
+	PctNegative          float64 `json:"pct_negative"`
+	PctNeutral           float64 `json:"pct_neutral"`
+	AvgFeedsPerDay       float64 `json:"avg_feeds_per_day"`
+	MostActiveSourceName string  `json:"most_active_source_name"`
+}

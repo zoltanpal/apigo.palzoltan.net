@@ -43,4 +43,5 @@ func SetupRoutes(r *gin.Engine, cfg config.Config) {
 	protected.GET("/pow/correlation_between_sources_avg_compound", handlers.CorrelationBetweenSourcesAvgCompound)
 	protected.GET("/pow/word_co_occurences", handlers.WordCoOccurrences)
 	protected.GET("/pow/phrase_frequency_trends", handlers.PhraseFrequencyTrends)
+	protected.GET("/pow/overall_statistics", handlers.OverallStatistics)
 }

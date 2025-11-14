@@ -359,3 +359,13 @@ func PhraseFrequencyTrends(c *gin.Context) {
 
 	c.JSON(http.StatusOK, rows)
 }
+
+func OverallStatistics(c *gin.Context) {
+	stats, err := repositories.OverallStatistics(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch overall statistics"})
+		return
+	}
+
+	c.JSON(http.StatusOK, stats)
+}

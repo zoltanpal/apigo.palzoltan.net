@@ -266,4 +266,72 @@ const (
         WHERE rnk <= 5
         ORDER BY year, date_group, source, rnk;
     `
+
+	OverallStatistics = `
+        WITH base AS (
+            SELECT 
+                MIN(f.published) AS first_feed_date,
+                MAX(f.published) AS last_feed_date,
+                COUNT(*)::bigint AS total_feeds,
+                COUNT(DISTINCT f.source_id) AS total_sources,
+
+                -- sentiment counts
+                SUM(CASE WHEN s.sentiment_key = 'positive' THEN 1 ELSE 0 END)::bigint AS total_positive,
+                SUM(CASE WHEN s.sentiment_key = 'negative' THEN 1 ELSE 0 END)::bigint AS total_negative,
+                SUM(CASE WHEN s.sentiment_key = 'neutral'  THEN 1 ELSE 0 END)::bigint AS total_neutral
+            FROM feeds f
+            LEFT JOIN feed_sentiments s ON s.feed_id = f.id
+        ),
+        most_source AS (
+            SELECT f.source_id, COUNT(*) AS feed_count
+            FROM feeds f
+            GROUP BY f.source_id
+            ORDER BY feed_count DESC
+            LIMIT 1
+        )
+        SELECT
+            b.first_feed_date,
+            b.last_feed_date,
+            EXTRACT(DAY FROM (b.last_feed_date - b.first_feed_date))::int AS timespan_days,
+
+            b.total_feeds,
+            b.total_sources,
+
+            -- sentiment counts
+            b.total_positive,
+            b.total_negative,
+            b.total_neutral,
+
+            -- sentiment percentages
+            CASE WHEN b.total_feeds > 0 
+                THEN ROUND(b.total_positive::numeric * 100 / b.total_feeds, 2)
+                ELSE NULL
+            END AS pct_positive,
+            CASE WHEN b.total_feeds > 0 
+                THEN ROUND(b.total_negative::numeric * 100 / b.total_feeds, 2)
+                ELSE NULL
+            END AS pct_negative,
+            CASE WHEN b.total_feeds > 0 
+                THEN ROUND(b.total_neutral::numeric * 100 / b.total_feeds, 2)
+                ELSE NULL
+            END AS pct_neutral,
+
+            -- average feeds per day
+            CASE 
+                WHEN EXTRACT(DAY FROM (b.last_feed_date - b.first_feed_date)) >= 1
+                THEN ROUND(
+                    b.total_feeds::numeric 
+                    / EXTRACT(DAY FROM (b.last_feed_date - b.first_feed_date)),
+                    2
+                )
+                ELSE NULL
+            END AS avg_feeds_per_day,
+
+            -- most active source
+            s.name      AS most_active_source_name
+
+        FROM base b
+        LEFT JOIN most_source ms ON TRUE
+        LEFT JOIN sources s ON s.id = ms.source_id;
+    `
 )
