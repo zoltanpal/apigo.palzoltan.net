@@ -423,6 +423,7 @@ func RssReader(ctx context.Context, lang string) ([]models.RSSItem, error) {
 	wg.Add(workers)
 
 	// 2) Workers
+	const batchSize = 20
 	for w := 0; w < workers; w++ {
 		go func(workerID int) {
 			defer wg.Done()
@@ -436,8 +437,6 @@ func RssReader(ctx context.Context, lang string) ([]models.RSSItem, error) {
 					fmt.Printf("RssReader: fetch error source=%d url=%s err=%v\n", source.ID, source.Rss, err)
 					continue
 				}
-
-				const batchSize = 25
 
 				for start := 0; start < len(items); start += batchSize {
 					end := start + batchSize
