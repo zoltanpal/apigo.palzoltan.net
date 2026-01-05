@@ -334,4 +334,10 @@ const (
         LEFT JOIN most_source ms ON TRUE
         LEFT JOIN sources s ON s.id = ms.source_id;
     `
+
+	SourcesByLanguage = `
+        SELECT id, rss, lang
+        FROM sources
+        WHERE lang = $1
+    `
 )

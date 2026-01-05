@@ -2,6 +2,7 @@
 package utils
 
 import (
+	"context"
 	"encoding/xml"
 	"fmt"
 	"golang-restapi/models"
@@ -9,6 +10,10 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
+
+	"github.com/mmcdole/gofeed"
+	"golang-restapi/sentimentpb"
 )
 
 // RSS struct for parsing Google News RSS
@@ -60,4 +65,81 @@ func GetGoogleNews(q, period, lang, country string) ([]models.GNewsItem, error) 
 	}
 
 	return feeds, nil
+}
+
+type Reader struct {
+	parser *gofeed.Parser
+}
+
+func NewReader() *Reader {
+	return &Reader{parser: gofeed.NewParser()}
+}
+
+// FetchSource reads one RSS URL and returns normalized items.
+func (r *Reader) FetchSource(ctx context.Context, sourceID int64, url string, lang string) ([]models.RSSItem, error) {
+	feed, err := r.parser.ParseURLWithContext(url, ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]models.RSSItem, 0, len(feed.Items))
+	for _, item := range feed.Items {
+
+		if item == nil || item.Title == "" || item.Link == "" {
+			continue
+		}
+		// published time
+		ts := time.Now().UTC()
+		if item.PublishedParsed != nil {
+			ts = item.PublishedParsed.UTC()
+		} else if item.UpdatedParsed != nil {
+			ts = item.UpdatedParsed.UTC()
+		}
+
+		// first category if present
+		cat := ""
+		if len(item.Categories) > 0 {
+			cat = strings.TrimSpace(item.Categories[0])
+		}
+
+		items = append(items, models.RSSItem{
+			SourceID:  sourceID,
+			Lang:      lang,
+			Title:     strings.TrimSpace(item.Title),
+			Link:      strings.TrimSpace(item.Link),
+			Category:  cat,
+			Published: ts,
+			FeedDate:  ts.Format("2006-01-02"),
+		})
+	}
+	return items, nil
+}
+
+// SentimentAnalyzeTitle calls the sentiment analysis gRPC service for the given title.
+func SentimentAnalyzeTitles(ctx context.Context, items []string, lang string) ([]*sentimentpb.AnalyzeResponse, error) {
+	if SentimentClient == nil {
+		return nil, fmt.Errorf("SentimentClient not initialized (call InitSentimentClient first)")
+	}
+
+	// timeout per RPC
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	reqItems := make([]*sentimentpb.AnalyzeRequest, 0, len(items))
+	for _, t := range items {
+		reqItems = append(reqItems, &sentimentpb.AnalyzeRequest{
+			Text:     t,
+			Language: lang,
+		})
+	}
+
+	resp, err := SentimentClient.BatchAnalyze(ctx, &sentimentpb.BatchAnalyzeRequest{
+		Items: reqItems,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("BatchAnalyze failed: %w", err)
+	}
+
+	return resp.Results, nil
 }

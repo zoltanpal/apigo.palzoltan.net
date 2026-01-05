@@ -369,3 +369,16 @@ func OverallStatistics(c *gin.Context) {
 
 	c.JSON(http.StatusOK, stats)
 }
+
+func RssReader(c *gin.Context) {
+	lang := c.DefaultQuery("lang", "hun")
+
+	feeds, err := repositories.RssReader(c.Request.Context(), lang)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch RSS feeds"})
+		return
+	}
+
+	c.JSON(http.StatusOK, feeds)
+}

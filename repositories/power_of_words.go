@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
+	//"golang-restapi/config"
 	"golang-restapi/db"
 	"golang-restapi/models"
 	"golang-restapi/queries"
@@ -389,4 +391,106 @@ func OverallStatistics(ctx context.Context) (models.Statistics, error) {
 		return models.Statistics{}, fmt.Errorf("OverallStatistics: scan error: %w", err)
 	}
 	return out, nil
+}
+
+func RssReader(ctx context.Context, lang string) ([]models.RSSItem, error) {
+	// 1) DB query
+	rows, err := db.DB.QueryContext(ctx, queries.SourcesByLanguage, lang)
+	if err != nil {
+		return nil, fmt.Errorf("RssReader: query error: %w", err)
+	}
+	defer rows.Close()
+
+	var sources []models.SourceDetails
+	for rows.Next() {
+		var s models.SourceDetails
+		if err := rows.Scan(&s.ID, &s.Rss, &s.Lang); err != nil {
+			return nil, fmt.Errorf("RssReader: scan error: %w", err)
+		}
+		sources = append(sources, s)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("RssReader: rows error: %w", err)
+	}
+
+	rssReader := utils.NewReader()
+
+	workers := 6
+	work := make(chan models.SourceDetails)
+	results := make(chan []models.RSSItem)
+
+	var wg sync.WaitGroup
+	wg.Add(workers)
+
+	// 2) Workers
+	for w := 0; w < workers; w++ {
+		go func(workerID int) {
+			defer wg.Done()
+			for source := range work {
+				// Give each fetch its own timeout
+				fetchCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
+				items, err := rssReader.FetchSource(fetchCtx, int64(source.ID), source.Rss, source.Lang)
+				cancel()
+
+				if err != nil {
+					fmt.Printf("RssReader: fetch error source=%d url=%s err=%v\n", source.ID, source.Rss, err)
+					continue
+				}
+
+				const batchSize = 25
+
+				for start := 0; start < len(items); start += batchSize {
+					end := start + batchSize
+					if end > len(items) {
+						end = len(items)
+					}
+
+					titles := make([]string, end-start)
+					for i := start; i < end; i++ {
+						titles[i-start] = items[i].Title
+					}
+
+					respItems, err := utils.SentimentAnalyzeTitles(ctx, titles, source.Lang)
+					if err != nil {
+						fmt.Printf("sentiment batch error source=%d url=%s err=%v\n", source.ID, source.Rss, err)
+						continue
+					}
+
+					n := end - start
+					if len(respItems) < n {
+						n = len(respItems)
+					}
+					for j := 0; j < n; j++ {
+						items[start+j].SentimentKey = respItems[j].SentimentKey
+						items[start+j].SentimentValue = respItems[j].SentimentValue
+					}
+				}
+
+				results <- items
+
+			}
+		}(w)
+	}
+
+	// 3) Feed work (in a goroutine so collector can run immediately)
+	go func() {
+		for _, s := range sources {
+			work <- s
+		}
+		close(work)
+	}()
+
+	// 4) Close results when workers done
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	// 5) Collect results
+	feeds := make([]models.RSSItem, 0, 1024)
+	for batch := range results {
+		feeds = append(feeds, batch...)
+	}
+
+	return feeds, nil
 }
