@@ -37,10 +37,10 @@ jobs:
           GOOS=linux GOARCH=amd64 CGO_ENABLED=0 \
           go build -ldflags="-s -w" -o "$BINARY_NAME" .
       
-      - name: Install UPX
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y upx
+      # - name: Install UPX
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install -y upx
 
       - name: Compress binary with UPX
         run: |
@@ -54,18 +54,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           source: "${{ env.BINARY_NAME }}"
           target: "${{ env.WORK_DIR }}"
-      
-      - name: Setup Permission & Owner
-        uses: appleboy/ssh-action@v1.1.0
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            cd "${{ env.WORK_DIR }}"
-            chmod 755 "${{ env.BINARY_NAME }}"
-            chown www-data:www-data "${{ env.BINARY_NAME }}"
-
+    
       - name: Restart Service
         uses: appleboy/ssh-action@v1.1.0
         with:
